@@ -20,6 +20,8 @@
 #define FLAG_BROAD_SHADOW 16
 // Drawn only where its corners wind clockwise on the screen: a triangle of it that faces away is given no area.
 #define FLAG_ONE_SIDED 32
+// A polygon of the map's scenery that may be seen through about the party (FieldPolygonFlags::SeeThrough).
+#define FLAG_SEE_THROUGH 64
 // From this bit, a sprite's or particle's ordering-table entry plus one: against the depth buffer
 // it stands at the far edge of that entry, all its quads alike.
 #define FLAG_ENTRY_SHIFT 8
@@ -31,6 +33,15 @@
 
 // A margin across a triangle's plane grows along the eye's ray as the triangle turns edge-on, to this many times at most.
 #define MAX_SLOPE_MARGIN 8.0
+
+// The see-through holes' shape: FieldSeeThrough.h's values.
+#define SEE_THROUGH_HOLES 6
+#define SEE_THROUGH_DEPTH_MARGIN 32.0
+#define SEE_THROUGH_DEPTH_FADE 64.0
+#define SEE_THROUGH_WIDEN 1.75
+#define SEE_THROUGH_EDGE 0.35
+#define SEE_THROUGH_FEET_FADE 0.1
+#define SEE_THROUGH_HEAD_ROOM 0.15
 
 // In the top byte of a polygon's first colour: this frame modulates its texels even when its packet draws them raw.
 #define COLOR_MODULATED (1u << 24)
@@ -111,6 +122,11 @@ float ColorScale;
 float OutputAlpha;
 // The target's samples a pixel.
 uint SampleCount;
+// The party's sprites the scenery in front of them is seen through about, in view space: each one's feet (w its half
+// width) and head.
+float4 SeeThroughFeet[SEE_THROUGH_HOLES];
+float4 SeeThroughHead[SEE_THROUGH_HOLES];
+uint SeeThroughCount;
 
 // Multisampling's four samples at their standard places, in sixteenths of a pixel from its centre (Direct3D's, which
 // Vulkan's standard places are).
@@ -168,7 +184,8 @@ void MainVS(
 	out float2 OutTexCoord : TEXCOORD0,
 	out float3 OutColor : COLOR0,
 	nointerpolation out uint OutPolygon : TEXCOORD1,
-	nointerpolation out uint OutColorFlags : TEXCOORD2)
+	nointerpolation out uint OutColorFlags : TEXCOORD2,
+	out float3 OutView : TEXCOORD3)
 {
 	const FFieldCorner Corner = CornerAt(Order[FirstVertex + VertexId]);
 	const float3 View = ViewOf(Corner);
@@ -203,6 +220,7 @@ void MainVS(
 	OutColor = UnpackColor(Colors[Corner.Polygon][Corner.Corner]);
 	OutPolygon = Corner.Polygon;
 	OutColorFlags = Colors[Corner.Polygon].x & 0xFF000000;
+	OutView = View;
 }
 
 bool DrawnInPass(uint Kind)
@@ -331,16 +349,56 @@ bool SampleTexel(float2 TexCoord, FFieldPolygon Polygon, uint PolygonFilter, flo
 	return SampleBilinear(TexCoord, Polygon, PolygonFilter == FILTER_CRISP, false, Footprint, Rgb);
 }
 
+// How much of the scenery at View a hole takes away, 0 to 1: FieldSeeThrough.h's SeeThroughShare.
+float SeeThroughShare(float4 Feet, float4 Head, float3 View)
+{
+	if (View.z <= 1.0 || Feet.z <= 1.0 || Head.z <= 1.0)
+	{
+		return 0.0;
+	}
+	const float InFront = saturate((min(Feet.z, Head.z) - View.z - SEE_THROUGH_DEPTH_MARGIN) / SEE_THROUGH_DEPTH_FADE);
+	const float2 Point = View.xy / View.z;
+	const float2 AtFeet = Feet.xy / Feet.z;
+	const float2 Up = Head.xy / Head.z - AtFeet;
+	const float Along = dot(Point - AtFeet, Up) / max(dot(Up, Up), 1e-8);
+	const float AboveFeet = saturate(Along / SEE_THROUGH_FEET_FADE);
+	const float2 Nearest = AtFeet + Up * clamp(Along, 0.0, 1.0 + SEE_THROUGH_HEAD_ROOM);
+	const float Radius = Feet.w * SEE_THROUGH_WIDEN / Feet.z;
+	const float Inside = saturate((1.0 - length(Point - Nearest) / max(Radius, 1e-8)) / SEE_THROUGH_EDGE);
+	return InFront * AboveFeet * Inside;
+}
+
+// A 4 x 4 ordered dither's threshold at a pixel: a share above it is taken away there.
+static const float Bayer4[16] = {0.0, 8.0, 2.0, 10.0, 12.0, 4.0, 14.0, 6.0, 3.0, 11.0, 1.0, 9.0, 15.0, 7.0, 13.0, 5.0};
+float DitherThreshold(uint2 Pixel)
+{
+	return (Bayer4[(Pixel.y & 3) * 4 + (Pixel.x & 3)] + 0.5) / 16.0;
+}
+
 float4 MainPS(
 	float4 SvPosition : SV_POSITION,
 	float2 TexCoord : TEXCOORD0,
 	float3 Color : COLOR0,
 	nointerpolation uint PolygonIndex : TEXCOORD1,
 	nointerpolation uint ColorFlags : TEXCOORD2,
+	float3 ViewPosition : TEXCOORD3,
 	uint Covered : SV_Coverage,
 	out uint Coverage : SV_Coverage) : SV_Target0
 {
 	const FFieldPolygon Polygon = PolygonAt(PolygonIndex);
+	if ((Polygon.Flags & FLAG_SEE_THROUGH) != 0 && SeeThroughCount != 0)
+	{
+		// The same in every pass of the polygon (its depth prepasses too), so no pass leaves depth where its colour is gone.
+		float Share = 0.0;
+		for (uint Hole = 0; Hole < SeeThroughCount; ++Hole)
+		{
+			Share = max(Share, SeeThroughShare(SeeThroughFeet[Hole], SeeThroughHead[Hole], ViewPosition));
+		}
+		if (Share > DitherThreshold(uint2(SvPosition.xy)))
+		{
+			discard;
+		}
+	}
 	const float2 TexelsAcross = ddx(TexCoord);
 	const float2 TexelsDown = ddy(TexCoord);
 	const float2 Footprint = abs(TexelsAcross) + abs(TexelsDown);

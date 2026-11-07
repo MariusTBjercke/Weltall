@@ -244,6 +244,7 @@ bool BuildFieldFrameDraw(const Weltall::FFieldScene& Scene, const Weltall::FFiel
 	Draw.WaveRuns = 0;
 	Draw.ParticleCorners = 0;
 	Draw.SpriteModelCorners.Reset();
+	Draw.SeeThroughHoles.Reset();
 	if (!Draw.Redirects.IsEmpty())
 	{
 		FMemory::Memset(Draw.Redirects.GetData(), 0xFF, Draw.Redirects.Num() * sizeof(uint32));
@@ -296,6 +297,7 @@ bool BuildFieldFrameDraw(const Weltall::FFieldScene& Scene, const Weltall::FFiel
 	Draw.bGearsDrawn = DoGearsFitMesh(Latest, Mesh);
 	AddGearColors(Latest, Mesh, Draw);
 	AddFieldCharacterQuads(Latest, Before, Alpha, Mesh, Draw);
+	AddFieldSeeThroughHoles(Latest, Before, Alpha, Options, Draw);
 	AddFieldParticleQuads(Latest, Before, Alpha, Mesh, Draw);
 	AddFieldSpriteModels(Latest, Before, Alpha, Mesh, Draw);
 	AddFieldChangedModels(Scene, Latest, Before, Alpha, Mesh, Draw);

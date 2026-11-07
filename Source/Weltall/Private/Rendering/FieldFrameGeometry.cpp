@@ -204,6 +204,44 @@ void AddFieldCharacterQuads(const Weltall::FFieldFrame& Latest, const Weltall::F
 	}
 }
 
+void AddFieldSeeThroughHoles(const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha, const FFieldRenderOptions& Options,
+	FFieldSceneDraw& Draw)
+{
+	Draw.SeeThroughHoles.Reset();
+	Draw.SeeThroughObject = static_cast<uint32>(Draw.Objects.Num() / 3 - 1);
+	if (Options.SeeThrough == Weltall::EFieldSeeThrough::Off)
+	{
+		return;
+	}
+	TArray<std::array<float, 3>, TInlineAllocator<64>> Corners;
+	for (int32 Number = 0; Number < static_cast<int32>(Latest.Characters.size()); ++Number)
+	{
+		const Weltall::FFieldCharacterView& Character = Latest.Characters[static_cast<std::size_t>(Number)];
+		if (!Character.bSeenThrough || Character.bOnFloor || Draw.SeeThroughHoles.Num() == static_cast<int32>(Weltall::FieldSeeThroughHoles))
+		{
+			continue;
+		}
+		const FVector3f Offset = FieldCharacterOffset(Character, Previous, Alpha);
+		Corners.Reset();
+		for (const Weltall::FFieldCharacterQuad& Entry : Latest.Quads)
+		{
+			if (Entry.Character != Number)
+			{
+				continue;
+			}
+			for (std::size_t Corner = 0; Corner < 4; ++Corner)
+			{
+				const FVector3f At = ToVector(Entry.Quad.ViewCorner(Corner)) + Offset;
+				Corners.Add({At.X, At.Y, At.Z});
+			}
+		}
+		if (!Corners.IsEmpty())
+		{
+			Draw.SeeThroughHoles.Add(Weltall::SeeThroughHoleOf(std::span<const std::array<float, 3>>(Corners.GetData(), static_cast<std::size_t>(Corners.Num()))));
+		}
+	}
+}
+
 void AddFieldBackdrop(const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha, const FFieldSceneMesh& Mesh,
 	FFieldSceneDraw& Draw)
 {

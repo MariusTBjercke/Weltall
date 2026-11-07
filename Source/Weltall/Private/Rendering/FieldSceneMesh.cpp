@@ -119,6 +119,11 @@ void FFieldSceneMesh::AddScenery(const Weltall::FFieldScene& Scene)
 			State.TexelMin = PackTexel(LowU, LowV);
 			State.TexelMax = PackTexel(HighU, HighV);
 		}
+		const Weltall::FFieldSceneObject& Owner = Scene.Objects[Polygon.Object];
+		if (!Owner.bBackground && !Owner.bPicture)
+		{
+			State.Flags |= FieldPolygonFlags::SeeThrough;
+		}
 	}
 }
 
@@ -174,4 +179,6 @@ void BuildFieldSceneDraw(const Weltall::FFieldScene& Scene, const Weltall::FFiel
 	Draw.SpriteFilter = Options.SpriteFilter;
 	Draw.AntiAliasing = Options.AntiAliasing;
 	Draw.bDepthBuffer = Options.Sorting != EFieldSorting::PaintersOrder;
+	// The scenery alone has no party to see.
+	Draw.SeeThroughHoles.Reset();
 }

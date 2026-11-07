@@ -52,8 +52,12 @@ public:
 		SHADER_PARAMETER(float, ColorScale)
 		SHADER_PARAMETER(float, OutputAlpha)
 		SHADER_PARAMETER(uint32, SampleCount)
+		SHADER_PARAMETER_ARRAY(FVector4f, SeeThroughFeet, [6])
+		SHADER_PARAMETER_ARRAY(FVector4f, SeeThroughHead, [6])
+		SHADER_PARAMETER(uint32, SeeThroughCount)
 	END_SHADER_PARAMETER_STRUCT()
 };
+static_assert(Weltall::FieldSeeThroughHoles == 6, "FieldScene.usf and FFieldScenePS hold six see-through holes");
 
 class FFieldSceneResolvePS final : public FGlobalShader
 {

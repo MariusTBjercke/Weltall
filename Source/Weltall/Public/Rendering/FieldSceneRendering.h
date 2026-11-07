@@ -4,6 +4,7 @@
 #include "Field/FieldBackdrop.h"
 #include "Field/FieldRenderOptions.h"
 #include "Field/FieldSceneFrame.h"
+#include "Field/FieldSeeThrough.h"
 #include "Graphics/TextureRegion.h"
 #include "RenderGraphFwd.h"
 #include "RenderGraphResources.h"
@@ -279,6 +280,14 @@ struct FFieldSceneDraw
 	bool bDepthBuffer = false;
 	/** The world's up in view space, which the shadows' floors face; zero where the shadows are drawn as the painter's order alone. */
 	FVector3f FloorUp = FVector3f::ZeroVector;
+	/**
+	 * The party's sprites the scenery in front of them is seen through about, in the space of SeeThroughObject's rows
+	 * (FFieldSeeThroughHole): placed by them as they are drawn, so a move of the player's view moves the holes with the
+	 * sprites. None while EFieldSeeThrough is off.
+	 */
+	TArray<Weltall::FFieldSeeThroughHole, TInlineAllocator<Weltall::FieldSeeThroughHoles>> SeeThroughHoles;
+	/** The object whose rows place the holes: the identity the characters' quads are drawn by. */
+	uint32 SeeThroughObject = 0;
 	FFieldPictureStretch PictureStretch;
 
 	static constexpr uint32 NoRedirect = 0xFFFFFFFF;

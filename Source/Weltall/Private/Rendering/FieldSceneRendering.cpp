@@ -328,6 +328,37 @@ namespace
 		return Buffers;
 	}
 
+	/** A frame's see-through holes where its objects' rows, as they are drawn, place them: feet and half width, then head. */
+	struct FSeeThroughShapes
+	{
+		FVector4f Feet[Weltall::FieldSeeThroughHoles];
+		FVector4f Head[Weltall::FieldSeeThroughHoles];
+		uint32 Count = 0;
+	};
+
+	FSeeThroughShapes SeeThroughShapesOf(const FFieldSceneDraw& Draw)
+	{
+		FSeeThroughShapes Shapes;
+		const int32 Row = static_cast<int32>(Draw.SeeThroughObject) * 3;
+		// A scene stretched before a picture moves its sprites by anchors the rows do not follow.
+		if (Draw.PictureStretch.bStaged || Draw.SeeThroughHoles.IsEmpty() || !Draw.Objects.IsValidIndex(Row + 2))
+		{
+			return Shapes;
+		}
+		const auto Place = [&Draw, Row](const std::array<float, 3>& Point)
+		{
+			const auto Dot = [&Point](const FVector4f& Rows) { return Rows.X * Point[0] + Rows.Y * Point[1] + Rows.Z * Point[2] + Rows.W; };
+			return FVector3f(Dot(Draw.Objects[Row]), Dot(Draw.Objects[Row + 1]), Dot(Draw.Objects[Row + 2]));
+		};
+		for (const Weltall::FFieldSeeThroughHole& Hole : Draw.SeeThroughHoles)
+		{
+			Shapes.Feet[Shapes.Count] = FVector4f(Place(Hole.Feet), Hole.HalfWidth);
+			Shapes.Head[Shapes.Count] = FVector4f(Place(Hole.Head), 0.0f);
+			++Shapes.Count;
+		}
+		return Shapes;
+	}
+
 	/**
 	 * Draws Runs [First, End) of a frame's scene into Viewport of Color (resolved into Resolved when multisampled), cleared
 	 * first or over what it holds.
@@ -387,10 +418,12 @@ namespace
 		const bool bDepthTarget = Draw.bDepthBuffer;
 		const FVector3f FloorUp = Draw.FloorUp;
 		const bool bShadowsOnFloors = !FloorUp.IsZero();
+		// Read here, as the frame is drawn: the player's moves of the view move the rows after the drawing was made.
+		const FSeeThroughShapes SeeThrough = SeeThroughShapesOf(Draw);
 
 		GraphBuilder.AddPass(RDG_EVENT_NAME("FieldScene"), PassParameters, ERDGPassFlags::Raster,
 			[PassParameters, Runs, VertexShader, PixelShader, Viewport, ProjectionScale, VramUnits, Filter, SpriteFilter, StaticCorners, StaticPolygons, bScissor,
-				ScissorRect, bDepthTarget, FloorUp, bShadowsOnFloors, Samples, Replacements](FRDGAsyncTask, FRHICommandList& RHICmdList)
+				ScissorRect, bDepthTarget, FloorUp, bShadowsOnFloors, Samples, Replacements, SeeThrough](FRDGAsyncTask, FRHICommandList& RHICmdList)
 			{
 				RHICmdList.SetViewport(static_cast<float>(Viewport.Min.X), static_cast<float>(Viewport.Min.Y), 0.0f, static_cast<float>(Viewport.Max.X),
 					static_cast<float>(Viewport.Max.Y), 1.0f);
@@ -453,6 +486,12 @@ namespace
 						PixelParameters.ColorScale = IsBlended(Run) && Run.Blend == Weltall::EBlendMode::AddQuarter ? 0.25f : 1.0f;
 						PixelParameters.OutputAlpha = IsBlended(Run) && Run.Blend == Weltall::EBlendMode::Average ? 0.5f : 1.0f;
 						PixelParameters.SampleCount = Samples;
+						for (uint32 Hole = 0; Hole < SeeThrough.Count; ++Hole)
+						{
+							PixelParameters.SeeThroughFeet[Hole] = SeeThrough.Feet[Hole];
+							PixelParameters.SeeThroughHead[Hole] = SeeThrough.Head[Hole];
+						}
+						PixelParameters.SeeThroughCount = SeeThrough.Count;
 						SetShaderParameters(RHICmdList, PixelShader, PixelShader.GetPixelShader(), PixelParameters);
 						RHICmdList.DrawPrimitive(0, Run.VertexCount / 3, 1);
 					}

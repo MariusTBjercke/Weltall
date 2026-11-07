@@ -32,6 +32,8 @@ namespace FieldPolygonFlags
 	constexpr uint32 BroadShadow = 16;
 	/** Drawn only where its corners wind clockwise on the screen as they are drawn: a triangle facing away is given no area. */
 	constexpr uint32 OneSided = 32;
+	/** A polygon of the map's scenery, neither its background nor a painted picture: it may be seen through about the party (EFieldSeeThrough). */
+	constexpr uint32 SeeThrough = 64;
 	/**
 	 * From this bit, a sprite's or particle's ordering-table entry plus one: against the depth buffer
 	 * it stands at the far edge of that entry, all its quads alike, so it sorts against the others of
@@ -169,6 +171,13 @@ FVector3f FieldCharacterOffset(const Weltall::FFieldCharacterView& Character, co
 
 /** The characters' quads as dynamic corners, their states and colours, each moved back toward the tick before's place by 1 - Alpha. */
 void AddFieldCharacterQuads(const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha, const FFieldSceneMesh& Mesh,
+	FFieldSceneDraw& Draw);
+
+/**
+ * The holes of the party's sprites the frame marks (FFieldCharacterView::bSeenThrough), where they are drawn Alpha of the
+ * way from Previous, in the space of the identity's rows the quads are drawn by; none while the options' SeeThrough is off.
+ */
+void AddFieldSeeThroughHoles(const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha, const FFieldRenderOptions& Options,
 	FFieldSceneDraw& Draw);
 
 /** The particles' quads as dynamic corners, their states and colours, each drawn between its two ticks' corners and colours. */

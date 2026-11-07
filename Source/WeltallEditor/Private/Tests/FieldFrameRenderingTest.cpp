@@ -151,12 +151,13 @@ namespace
 		}
 
 		TArray<FColor> Render(const FVramTexture& Vram, const FTestFrame* Previous = nullptr, float Alpha = 1.0f,
-			EFieldSorting Sorting = EFieldSorting::PaintersOrder)
+			EFieldSorting Sorting = EFieldSorting::PaintersOrder, Weltall::EFieldSeeThrough SeeThrough = Weltall::EFieldSeeThrough::Off)
 		{
 			const FFieldSceneMesh Mesh(Scene);
 			FFieldRenderOptions Options;
 			Options.AntiAliasing = EFieldAntiAliasing::None;
 			Options.Sorting = Sorting;
+			Options.SeeThrough = SeeThrough;
 			FFieldSceneDraw Draw;
 			if (Previous != nullptr)
 			{
@@ -678,6 +679,47 @@ bool FFieldViewMoveTest::RunTest(const FString&)
 		const float Drawn = Rows.X * InFrom.X + Rows.Y * InFrom.Y + Rows.Z * InFrom.Z + Rows.W;
 		TestTrue(FString::Printf(TEXT("axis %d at %f, not %f"), Row, Drawn, Expected[Row]), FMath::IsNearlyEqual(Drawn, Expected[Row], 0.01f));
 	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFieldSeeThroughRenderingTest, "Weltall.Rendering.FieldSeeThroughShowsTheParty",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FFieldSeeThroughRenderingTest::RunTest(const FString&)
+{
+	const Weltall::FVram Vram = MakeVram();
+	FVramTexture Units;
+	BeginInitResource(&Units);
+	Units.Follow(Vram);
+
+	// A sprite 2000 units away over the screen's (152, 96)-(168, 128), behind a flat wall 1000 units away over much of
+	// the screen. The sprite's second texel column, (156..159, y), is red.
+	const auto Render = [&Units](bool bParty, Weltall::EFieldSeeThrough SeeThrough, EFieldSorting Sorting)
+	{
+		FTestFrame Test;
+		Test.Sprite(152, 96, 2000);
+		Test.Frame.Characters.back().bSeenThrough = bParty;
+		Test.Quad(100, 60, 220, 180, FlatQuad, {0, 0, 200});
+		Test.Evaluate();
+		return Test.Render(Units, nullptr, 1.0f, Sorting, SeeThrough);
+	};
+	const auto At = [](const TArray<FColor>& Pixels, int32 X, int32 Y) { return Pixels[Y * ScreenWidth + X]; };
+
+	for (const EFieldSorting Sorting : {EFieldSorting::PaintersOrder, EFieldSorting::DepthBufferWithScenery})
+	{
+		const TArray<FColor> Hidden = Render(true, Weltall::EFieldSeeThrough::Off, Sorting);
+		const TArray<FColor> Seen = Render(true, Weltall::EFieldSeeThrough::On, Sorting);
+		const TArray<FColor> Stranger = Render(false, Weltall::EFieldSeeThrough::On, Sorting);
+		// Off, the wall hides the sprite; on, the sprite's middle shows through it; someone not of the party stays hidden.
+		TestFalse(TEXT("The wall hides the sprite when see-through is off"), IsNear(At(Hidden, 157, 112), 255, 0, 0));
+		TestTrue(TEXT("The sprite shows through the wall"), IsNear(At(Seen, 157, 112), 255, 0, 0));
+		TestFalse(TEXT("Only the party is seen through"), IsNear(At(Stranger, 157, 112), 255, 0, 0));
+		// Away from the sprite, and below its feet, the wall is drawn as before.
+		TestEqual(TEXT("The wall away from the sprite is unchanged"), At(Seen, 110, 70), At(Hidden, 110, 70));
+		TestEqual(TEXT("The wall below the sprite's feet is unchanged"), At(Seen, 160, 150), At(Hidden, 160, 150));
+	}
+	BeginReleaseResource(&Units);
+	FlushRenderingCommands();
 	return true;
 }
 
