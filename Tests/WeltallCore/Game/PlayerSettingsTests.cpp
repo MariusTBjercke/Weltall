@@ -167,6 +167,7 @@ TEST_CASE("The settings' text lists every setting and reads back the same", "[Se
 	CHECK(ValueOf(Defaults, "field.detailed_pilots") == "true");
 	CHECK(ValueOf(Defaults, "field.gear_models") == "outside_cutscenes");
 	CHECK(ValueOf(Defaults, "field.battle_flashes") == "original");
+	CHECK(ValueOf(Defaults, "field.see_through") == "on");
 	CHECK(ValueOf(Defaults, "sound.output") == "stereo");
 	CHECK(ValueOf(Defaults, "display.window_size").empty());
 	CHECK(ValueOf(Defaults, "display.aspect") == "window");
@@ -280,6 +281,7 @@ TEST_CASE("The settings' text lists every setting and reads back the same", "[Se
 	CHECK(ValueOf(Text, "field.gear_models") == "true");
 	CHECK(ValueOf(Text, "field.battle_flashes") == "softer");
 	CHECK(ReadPlayerSettings("field.battle_flashes = off\n").Field.BattleFlashes == EBattleFlashes::Off);
+	CHECK(ReadPlayerSettings("field.see_through = off\n").Field.SeeThrough == EFieldSeeThrough::Off);
 	CHECK(ValueOf(Text, "sound.output") == "wide_stereo");
 	CHECK(ValueOf(Text, "display.window_size") == "2560x1440");
 	CHECK(ValueOf(Text, "display.aspect") == "16:9");

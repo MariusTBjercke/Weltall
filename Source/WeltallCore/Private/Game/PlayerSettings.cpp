@@ -322,6 +322,7 @@ namespace Weltall
 			Visitor.Choice("field.battle_flashes", Field.BattleFlashes, {"original", "softer", "off"});
 			Visitor.Choice("field.message_box_scale", Field.MessageBoxScale, {"original", "whole", "smaller"});
 			Visitor.Choice("field.message_box_background", Field.MessageBoxBackground, {"original", "solid"});
+			Visitor.Choice("field.see_through", Field.SeeThrough, {"off", "on"});
 
 			Visitor.Level("sound.master_volume", Settings.Volumes.Master, 0, FSoundVolumes::Full);
 			Visitor.Level("sound.music_volume", Settings.Volumes.Music, 0, FSoundVolumes::Full);

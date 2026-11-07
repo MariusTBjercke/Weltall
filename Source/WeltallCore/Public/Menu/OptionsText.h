@@ -94,6 +94,8 @@ namespace Weltall::OptionsText
 		inline constexpr std::array<std::string_view, 3> MessageBoxScaleValues{"Original", "Whole pixels", "Smaller"};
 		inline constexpr FRow MessageBoxBackground{"Text box shading", {"Original darkens the scene", "behind the box. Solid hides", "it, so text keeps contrast."}};
 		inline constexpr std::array<std::string_view, 2> MessageBoxBackgroundValues{"Original", "Solid"};
+		inline constexpr FRow SeeThrough{"See-through scenery", {"Shows the party through", "trees and walls in front of", "them. Off draws them hidden."}};
+		inline constexpr std::array<std::string_view, 2> SeeThroughValues{"Off", "On"};
 		inline constexpr FRow PauseInBackground{"Pause in background", {"Pauses the game when its", "window isn't in focus. Play", "time stops too."}};
 	}
 

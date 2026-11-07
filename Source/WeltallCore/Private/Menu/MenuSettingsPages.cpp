@@ -154,7 +154,7 @@ namespace Weltall
 		namespace Display
 		{
 			enum : int32 { FullScreen, WindowSize, Aspect, IntegerScaling, Sorting, SceneryFilter, SpriteFilter, MovieFilter, Crt, AntiAliasing, Culling, Pilots, Gears, ChapterCards, MessageBoxScale,
-				MessageBoxBackground, TextSpeed, AutoAdvance, BattleSpeed, BattleFlashes, BackgroundPause, Count };
+				MessageBoxBackground, TextSpeed, AutoAdvance, BattleSpeed, BattleFlashes, SeeThrough, BackgroundPause, Count };
 
 			/** The window's rows (full screen, its size) are not there where the game has no window of its own: the rows after them move up. */
 			int32 Hidden(const FDisplayModes& Modes)
@@ -317,6 +317,8 @@ namespace Weltall
 				return Shown(Text::Display::MessageBoxScale, ChoiceName(Settings.Field.MessageBoxScale, Text::Display::MessageBoxScaleValues));
 			case Display::MessageBoxBackground:
 				return Shown(Text::Display::MessageBoxBackground, ChoiceName(Settings.Field.MessageBoxBackground, Text::Display::MessageBoxBackgroundValues));
+			case Display::SeeThrough:
+				return Shown(Text::Display::SeeThrough, ChoiceName(Settings.Field.SeeThrough, Text::Display::SeeThroughValues));
 			case Display::TextSpeed:
 				return Shown(Text::Display::TextSpeed, ChoiceName(Settings.TextSpeed, Text::Display::TextSpeedValues));
 			case Display::AutoAdvance:
@@ -532,6 +534,8 @@ namespace Weltall
 				return StepChoice(Settings.Field.MessageBoxScale, Direction, 3);
 			case Display::MessageBoxBackground:
 				return StepChoice(Settings.Field.MessageBoxBackground, Direction, 2);
+			case Display::SeeThrough:
+				return StepChoice(Settings.Field.SeeThrough, Direction, 2);
 			case Display::TextSpeed:
 				return StepChoice(Settings.TextSpeed, Direction, 4);
 			case Display::AutoAdvance:

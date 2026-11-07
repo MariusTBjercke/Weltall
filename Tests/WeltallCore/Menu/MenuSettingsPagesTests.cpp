@@ -458,9 +458,18 @@ TEST_CASE("The options' choices wrap, and their numbers step within their ranges
 	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 17, -1, Settings, bCustomPicked));
 	CHECK(Settings.Field.BattleFlashes == EBattleFlashes::Off);
 
-	// In the background the game stops and is silent, unless set otherwise.
-	CHECK(FSettingsPages::Row(ESettingsPage::Display, 18, Settings).Value == Text::On);
+	// The scenery in front of the party: seen through about them at first, then as the original draws it, round.
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 18, Settings).Label == Text::Display::SeeThrough.Label);
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 18, Settings).Value == "On");
 	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 18, 1, Settings, bCustomPicked));
+	CHECK(Settings.Field.SeeThrough == EFieldSeeThrough::Off);
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 18, Settings).Value == "Off");
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 18, 1, Settings, bCustomPicked));
+	CHECK(Settings.Field.SeeThrough == EFieldSeeThrough::On);
+
+	// In the background the game stops and is silent, unless set otherwise.
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 19, Settings).Value == Text::On);
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 19, 1, Settings, bCustomPicked));
 	CHECK_FALSE(Settings.Display.bPauseInBackground);
 	CHECK(FSettingsPages::Row(ESettingsPage::Sound, SoundRow::InBackground, Settings).Value == Text::Off);
 	REQUIRE(FSettingsPages::Step(ESettingsPage::Sound, SoundRow::InBackground, 1, Settings, bCustomPicked));
