@@ -95,6 +95,20 @@ exceptions off, so Catch2's `SKIP` terminates instead of skipping. `.agents/test
 holds the list and the full explanation; a failure outside that list is a real regression. The first
 CMake build of the core and its tests took ~25 minutes.
 
+The rendering tests in `Source/WeltallEditor/Private/Tests` are Unreal automation tests and need a real
+GPU (no `-nullrhi`). Build the editor target in place (`Binaries/` and `Intermediate/` are git-ignored;
+this builds the working tree, not `HEAD`) and run them headless:
+
+```powershell
+$UE = ((Get-Content local.env | Select-String '^UE_ROOT=').Line -split '=', 2)[1]
+& "$UE\Engine\Build\BatchFiles\Build.bat" WeltallEditor Win64 Development "-Project=$PWD\Weltall.uproject" -WaitMutex
+& "$UE\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "$PWD\Weltall.uproject" -ExecCmds="Automation RunTests Weltall; Quit" -unattended -nopause -nosplash -nosound "-abslog=$PWD\out\editor-tests.log"
+Select-String -Path out\editor-tests.log -Pattern "Test Completed"
+```
+
+Narrow the filter (`Weltall.Rendering.Field`) to run fewer. **Expected on this machine: 77 of 77 report
+`Result={Success}`** (2026-11-07). The in-place editor build took 90 s on top of an existing engine.
+
 `WeltallMapText <map id>` prints a disc map in the text format that story documents start from. Its
 output contains original game scripts and text: inspect it, never commit it.
 
