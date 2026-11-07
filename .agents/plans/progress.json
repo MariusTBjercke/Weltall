@@ -99,7 +99,7 @@
         "Shaders/Private/FieldScene.usf",
         "Tests/WeltallCore/Field/FieldSeeThroughTests.cpp"
       ],
-      "verify": "the owner plays a map with scenery in front of the party from D:\\\\Games\\\\Weltall, at each bubble size, turning the free camera",
+      "verify": "the owner plays a map with scenery in front of the party from D:\\Games\\Weltall, at each bubble size, turning the free camera",
       "blocked_by": [],
       "evidence": ".agents/validation/m02-see-through.md"
     }
