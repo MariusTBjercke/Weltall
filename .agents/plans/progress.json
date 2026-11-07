@@ -35,6 +35,23 @@
       "verify": "the owner confirms each item is what they meant",
       "blocked_by": ["the owner's play notes, which are not written down yet"],
       "evidence": ""
+    },
+    {
+      "id": "03",
+      "title": "Make the message font readable on modern screens",
+      "status": "todo",
+      "owner": "",
+      "files": [
+        "Source/WeltallCore/Private/Field/FieldScreenLayer.cpp",
+        "Source/WeltallCore/Public/Text/MesFont.h",
+        "Source/Weltall/Private/Shell/TextModFiles.cpp",
+        "Source/WeltallCore/Public/Menu/OptionsText.h"
+      ],
+      "verify": "the owner reads a message box in the game and says it is clearer, from D:\\Games\\Weltall",
+      "blocked_by": [
+        "choosing a path: redraw the 12x11 glyphs (asset only), offer several sheets, or build a high-resolution text path"
+      ],
+      "evidence": ".agents/research/font-legibility.md"
     }
   ]
 }

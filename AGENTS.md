@@ -145,8 +145,10 @@ Re-verify before contradicting any of these; each has a one-line check.
 1. This file.
 2. `.agents/plans/00-context.md` — what this fork is trying to change.
 3. `.agents/plans/progress.json` — what is done and what is next.
-4. `README.md` — the player-facing view of every feature and option (it doubles as the feature map).
-5. `.agents/conventions.md` — commit style and language rules before writing anything.
+4. `.agents/research/` — investigations already finished, so they are not repeated. Start with
+   `font-legibility.md`, which maps how text is drawn and what changing it would cost.
+5. `README.md` — the player-facing view of every feature and option (it doubles as the feature map).
+6. `.agents/conventions.md` — commit style and language rules before writing anything.
 
 ## Conventions
 
