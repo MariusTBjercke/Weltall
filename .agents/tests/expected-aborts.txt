@@ -1,0 +1,39 @@
+Tests that abort with 0xC0000409 on a machine that has only the USA discs.
+
+Why: each of these reaches `REQUIRE_DISC(...)` with a release whose disc is *optional* — the English
+undub, a fan translation, or Perfect Works Build. `REQUIRE_DISC` handles a missing disc with Catch2's
+`SKIP`, and this project compiles with exceptions off (`/EHs-c-`, `-fno-exceptions`). Catch2 then
+prints `SKIPPED: disc not found in Games/` and terminates the process deliberately:
+
+    Catch will terminate because it needed to throw an exception.
+    The message was: Explicitly skipping tests during runtime requires exceptions
+
+So these are not failures of the code under test, and `ctest` exits 1 on such a machine by design.
+A failure that is NOT in this list, or one whose message is not that `SKIP`, is a real regression.
+
+Snapshot: 19 tests, Weltall 1.0.1, 2026-11-07, `Games/` holding only `Xenogears (USA) (Disc 1).bin` and
+`(Disc 2).bin`. Re-derive with `ctest --preset windows 2>&1 | Select-String "tests FAILED" -Context 0,25`.
+The names can change when upstream edits a test; the criterion above is what matters.
+
+Voice language chooses matching USA and undub sources without changing text or the drive
+The supported undubs subtitle the movies their patch lists, every line's picture in its file
+With Perfect Works' files battle events run as the mod's code runs them
+The opening shows its first subtitle from frame 931 to 970, laid where the patch draws it
+With Perfect Works' rebalanced party the Menu's gear parts give their defenses as the mod's Menu reads them
+With Perfect Works' arena Battling's fight runs as the mod's Battling runs it
+An unavailable voice track falls back to the gameplay disc and Japanese discs remain extraction only
+Perfect Works 0.11.4's battle events' scripts come with its change to their message windows
+Perfect Works 0.11.4 subtitles the undub's movies with its own table, every line's picture in its file
+Movie subtitles show with the undub's sound on Auto, over either sound when on, and never when off
+Every message of the undub's discs reads back from the text export
+Perfect Works 0.11.4's rebalances come in its patcher's merged folders, and not with story mode
+A release whose subtitles lack a file of pictures gives none for that disc
+Perfect Works 0.11.4's arena modes take their folder's own files, and not with story mode
+Battle voices can use the second disc's language when only that source was supplied
+Detected supported undubs never interpret their patch code as indexed files
+Movie subtitles come from the source chosen, Perfect Works' first on Auto while the game uses it, either where only it is given
+The library recognizes voice variants and prefers the original USA gameplay source
+Supported undub discs power on and enter the field with English text
+
+To make them run and pass instead of aborting, supply the data they want in `Games/` (all git-ignored):
+an English undub set, and a copy of Perfect Works Build's files.

@@ -80,10 +80,39 @@ and its contents intact, and a real folder (not a reparse point) is refused rath
 `D:\Games\Weltall-1.0.1-Windows` still holds the untouched release (Assets, Docs, Engine, Games, Mods,
 Weltall, Weltall.exe).
 
+## Core tests
+
+Built in ~25 minutes and run with the discs present:
+
+```console
+$ cd Tests; cmake --preset windows; cmake --build --preset windows; ctest --preset windows
+...
+99% tests passed, 19 tests failed out of 1983
+Total Test time (real) =  85.35 sec
+```
+
+The 19 are not failures of the code under test. Each reaches `REQUIRE_DISC` with a release whose disc
+is optional (the English undub, a fan translation, Perfect Works Build). `REQUIRE_DISC` uses Catch2's
+`SKIP`, this project compiles with exceptions off, and Catch2 therefore terminates the process:
+
+```console
+$ out\tests\windows\Release\WeltallCoreTests.exe "Supported undub discs power on and enter the field with English text"
+VoiceLanguageContentTests.cpp(51): SKIPPED:
+explicitly with message:
+  disc not found in Games/: Release
+
+Catch will terminate because it needed to throw an exception.
+The message was: Explicitly skipping tests during runtime requires exceptions
+=== exit: C0000409 ===
+```
+
+The same binary run against a disc that *is* present returns `00000000` and passes. The exact 19 are
+snapshotted in `.agents/tests/expected-aborts.txt`, so a failure outside that set is a real regression.
+
 ## Not proven
 
 - The game was started **headless** (`-nullrhi -nosound -unattended`) by the check. Nothing was played
   interactively from `D:\Games\Weltall` in this session.
 - Only the `Development` configuration was built. `Shipping`, Linux and Android are unexercised.
-- The CMake test suites were building at the time of writing; see the follow-up section in
-  `00-context.md` item 01 or the log in `out/tests/windows`.
+- The 19 optional-data suites above have never run here, so undub, translation and Perfect Works
+  behaviour is entirely unverified on this machine.

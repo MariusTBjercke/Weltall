@@ -87,6 +87,12 @@ Tests read disc images from `WELTALL_GAMES_DIR` (`<repo>/Games`, set by `Tests/C
 **report a skip when a disc is missing** — a green run without the discs has not tested the game logic.
 Oracle tests compare the port against stored digests of the original code running in an emulated CPU.
 
+**Expected result on this machine: 1964 of 1983 pass and 19 abort with `0xC0000409`.** Those 19 need
+optional data this machine does not have (the English undub, Perfect Works Build), and the build has
+exceptions off, so Catch2's `SKIP` terminates instead of skipping. `.agents/tests/expected-aborts.txt`
+holds the list and the full explanation; a failure outside that list is a real regression. The first
+CMake build of the core and its tests took ~25 minutes.
+
 `WeltallMapText <map id>` prints a disc map in the text format that story documents start from. Its
 output contains original game scripts and text: inspect it, never commit it.
 

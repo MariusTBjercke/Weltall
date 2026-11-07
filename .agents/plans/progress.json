@@ -1,14 +1,15 @@
 {
   "schema": 1,
-  "updated": "2026-11-07T10:15:00Z",
+  "updated": "2026-11-07T10:55:00Z",
   "items": [
     {
       "id": "01",
       "title": "Set up the fork: remotes, local build, game data and play folder",
-      "status": "in_progress",
+      "status": "done",
       "owner": "agent",
       "files": [
         "local.env",
+        "local.env.example",
         "Scripts/build.ps1",
         "Scripts/package.py",
         "AGENTS.md",
@@ -17,9 +18,11 @@
         ".agents/plans/00-context.md",
         ".agents/plans/01-definition-of-done.md",
         ".agents/plans/progress.json",
-        ".agents/validation/README.md"
+        ".agents/validation/README.md",
+        ".agents/validation/m00-setup.md",
+        ".agents/tests/expected-aborts.txt"
       ],
-      "verify": "python Scripts/package.py Development  (then) .\\Scripts\\build.ps1 -LinkOnly",
+      "verify": "python Scripts/package.py Development, then ctest --preset windows in Tests/ (1964/1983 pass; the 19 aborts are listed in .agents/tests/expected-aborts.txt)",
       "blocked_by": [],
       "evidence": ".agents/validation/m00-setup.md"
     },
