@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated": "2026-11-07T14:10:00Z",
+  "updated": "2026-11-07T21:00:00Z",
   "items": [
     {
       "id": "01",
@@ -31,9 +31,14 @@
       "title": "Write down the owner's tweak list as work items",
       "status": "todo",
       "owner": "",
-      "files": [".agents/plans/progress.json", ".agents/plans/items/"],
+      "files": [
+        ".agents/plans/progress.json",
+        ".agents/plans/items/"
+      ],
       "verify": "the owner confirms each item is what they meant",
-      "blocked_by": ["the owner's play notes, which are not written down yet"],
+      "blocked_by": [
+        "the owner's play notes, which are not written down yet"
+      ],
       "evidence": ""
     },
     {
@@ -77,6 +82,26 @@
       "verify": "the owner plays a dialogue scene from D:\\Games\\Weltall with Options, Display, Text box size at Whole pixels or Smaller, and Text box shading at Solid",
       "blocked_by": [],
       "evidence": ".agents/validation/m01-message-boxes.md"
+    },
+    {
+      "id": "05",
+      "title": "See-through scenery about the party on the field, and steadier 3D under the free camera",
+      "status": "in_progress",
+      "owner": "agent",
+      "files": [
+        "Source/WeltallCore/Public/Field/FieldSeeThrough.h",
+        "Source/WeltallCore/Private/Field/FieldSeeThrough.cpp",
+        "Source/WeltallCore/Private/Field/FieldFrameCapture.cpp",
+        "Source/WeltallCore/Private/Field/FieldSceneFrame.cpp",
+        "Source/Weltall/Private/Rendering/FieldFrameGeometry.cpp",
+        "Source/Weltall/Private/Rendering/FieldDrawBuilder.cpp",
+        "Source/Weltall/Private/Rendering/FieldSceneRendering.cpp",
+        "Shaders/Private/FieldScene.usf",
+        "Tests/WeltallCore/Field/FieldSeeThroughTests.cpp"
+      ],
+      "verify": "the owner plays a map with scenery in front of the party from D:\\\\Games\\\\Weltall, at each bubble size, turning the free camera",
+      "blocked_by": [],
+      "evidence": ".agents/validation/m02-see-through.md"
     }
   ]
 }
