@@ -218,6 +218,7 @@ namespace Weltall
 		/** The characters the last tick drew, which the frames that run no tick (the pause, fades, the menu's shading) show still. */
 		std::vector<FFieldCharacterView> HeldCharacters;
 		std::vector<FFieldCharacterQuad> HeldQuads;
+		std::vector<int32> HeldGearSlots;
 		/** The party's own sprites for their pilots, while the player has them drawn. */
 		std::unique_ptr<FFieldPilotStandIns> StandIns;
 		/** The gears' models for their sprites, while the player has them drawn; and whether in cutscenes too. */

@@ -45,6 +45,9 @@ namespace Weltall
 	/** Whether the actor stands for one of the party's filled slots. */
 	WELTALLCORE_API bool IsPartyActor(const FEventContext& Context, int32 Actor);
 
+	/** Whether the scenery in front of the actor may be seen through: one of the party's, or the one the player controls. */
+	WELTALLCORE_API bool IsSeenThroughActor(const FEventContext& Context, int32 Actor);
+
 	/** The hole about a sprite whose quads' corners in view space are Corners: none (zero width) for no corners. */
 	WELTALLCORE_API FFieldSeeThroughHole SeeThroughHoleOf(std::span<const std::array<float, 3>> Corners);
 

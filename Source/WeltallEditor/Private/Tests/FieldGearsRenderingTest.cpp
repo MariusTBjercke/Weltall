@@ -610,4 +610,87 @@ bool FFieldPlacedGearRenderingTest::RunTest(const FString&)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFieldGearSeeThroughRenderingTest, "Weltall.Rendering.FieldSeeThroughShowsThePartysGears",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FFieldGearSeeThroughRenderingTest::RunTest(const FString&)
+{
+	const Weltall::FVram Vram = MakeVram();
+	FVramTexture Units;
+	BeginInitResource(&Units);
+	Units.Follow(Vram);
+
+	// The standing gear's blue triangle 900 units ahead, its point 110 units below its top, and a green quad of the
+	// scenery 500 units ahead over the screen's (10, 12)-(310, 212), drawn after it (corners on the screen, which the
+	// kernel needs to draw it).
+	const FStandingGear Gear;
+	Weltall::FFieldScene Scene;
+	Weltall::FMdlPart& Part = Scene.Models.emplace_back().Parts.emplace_back();
+	Part.Vertices = {{-150, -100, 0}, {150, -100, 0}, {-150, 100, 0}, {150, 100, 0}};
+	Weltall::FMdlPrimitive Quad;
+	Quad.Type = Weltall::EMdlPrimitiveType::StaticFlatQuad;
+	Quad.Code = FlatQuad;
+	Quad.Color = {0, 255, 0};
+	Quad.Vertices = {0, 1, 2, 3};
+	Part.Primitives.push_back(Quad);
+	Weltall::FFieldScenePolygon Polygon;
+	Polygon.Packet.Code = FlatQuad;
+	Polygon.Packet.Colors[0] = Quad.Color;
+	Scene.Polygons.push_back(Polygon);
+	Weltall::FFieldSceneObject& Object = Scene.Objects.emplace_back();
+	Object.Placement = Weltall::FGteMatrix::Identity();
+	Object.Placement.T = {0, 0, 500};
+	Object.Bounds = {{0, 0, 0}, 5000};
+	Object.PolygonCount = 1;
+	Weltall::FFieldFrame Latest = Gear.Frame();
+	Latest.Gears.Items = Gear.Layout;
+	Latest.View.Scene = Latest.View.View;
+	Latest.View.ScreenRotation = Weltall::FGteMatrix::Identity();
+	Latest.View.Billboard = Weltall::FGteMatrix::Identity();
+	Weltall::EvaluateFieldScene(Scene, Latest.View, Weltall::EFieldCulling::InRange, Latest.Scenery);
+	Latest.SceneryWorld.assign(Scene.Objects.size(), {});
+	for (const uint32 Drawn : Latest.Scenery.DrawOrder)
+	{
+		Latest.Order.push_back({Drawn, Weltall::EFieldDrawKind::Scenery});
+	}
+
+	const FFieldSceneMesh Mesh(Scene, Gear.Layout, 1);
+	const auto Render = [&](bool bParty, Weltall::EFieldSeeThrough SeeThrough, EFieldSorting Sorting)
+	{
+		Weltall::FFieldFrame Frame = Latest;
+		if (bParty)
+		{
+			Frame.SeenThroughGearSlots = {0};
+		}
+		FFieldRenderOptions Options;
+		Options.AntiAliasing = EFieldAntiAliasing::None;
+		Options.Sorting = Sorting;
+		Options.SeeThrough = SeeThrough;
+		FFieldSceneDraw Draw;
+		BuildFieldFrameDraw(Scene, Frame, nullptr, 1.0f, Mesh, Options, Draw);
+		return RenderFieldSceneOffscreen(Mesh, Units, Draw, FIntPoint(ScreenWidth, ScreenHeight));
+	};
+	const auto NearIn = [this](const TArray<FColor>& In, const FString& What, int32 X, int32 Y, int32 R, int32 G, int32 B)
+	{
+		const FColor& Pixel = In[Y * ScreenWidth + X];
+		const bool bNear = FMath::Abs(Pixel.R - R) <= 2 && FMath::Abs(Pixel.G - G) <= 2 && FMath::Abs(Pixel.B - B) <= 2;
+		TestTrue(FString::Printf(TEXT("%s: (%d, %d, %d) near (%d, %d, %d)"), *What, Pixel.R, Pixel.G, Pixel.B, R, G, B), bNear);
+	};
+	for (const EFieldSorting Sorting : {EFieldSorting::PaintersOrder, EFieldSorting::DepthBufferWithScenery})
+	{
+		const FString Name = Sorting == EFieldSorting::PaintersOrder ? TEXT("painter's order") : TEXT("depth buffer");
+		const TArray<FColor> Hidden = Render(true, Weltall::EFieldSeeThrough::Off, Sorting);
+		const TArray<FColor> Seen = Render(true, Weltall::EFieldSeeThrough::On, Sorting);
+		const TArray<FColor> Stranger = Render(false, Weltall::EFieldSeeThrough::On, Sorting);
+		// The triangle's middle, 30 units below its top: (160, 128) on the screen.
+		NearIn(Hidden, Name + TEXT(", off: the scenery hides the gear"), 160, 128, 0, 255, 0);
+		NearIn(Seen, Name + TEXT(", on: the party's gear shows through"), 160, 128, 0, 0, 255);
+		NearIn(Stranger, Name + TEXT(", on: another gear stays hidden"), 160, 128, 0, 255, 0);
+		NearIn(Seen, Name + TEXT(", on: the scenery away from the gear is kept"), 40, 40, 0, 255, 0);
+	}
+	BeginReleaseResource(&Units);
+	FlushRenderingCommands();
+	return true;
+}
+
 #endif

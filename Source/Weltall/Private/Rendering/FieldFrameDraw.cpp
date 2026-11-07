@@ -297,7 +297,6 @@ bool BuildFieldFrameDraw(const Weltall::FFieldScene& Scene, const Weltall::FFiel
 	Draw.bGearsDrawn = DoGearsFitMesh(Latest, Mesh);
 	AddGearColors(Latest, Mesh, Draw);
 	AddFieldCharacterQuads(Latest, Before, Alpha, Mesh, Draw);
-	AddFieldSeeThroughHoles(Latest, Before, Alpha, Options, Draw);
 	AddFieldParticleQuads(Latest, Before, Alpha, Mesh, Draw);
 	AddFieldSpriteModels(Latest, Before, Alpha, Mesh, Draw);
 	AddFieldChangedModels(Scene, Latest, Before, Alpha, Mesh, Draw);
@@ -305,6 +304,7 @@ bool BuildFieldFrameDraw(const Weltall::FFieldScene& Scene, const Weltall::FFiel
 	AddFieldBackdrop(Latest, Before, Alpha, Mesh, Draw);
 	// The gears' rows after the identity the quads above are drawn by, then their cloths.
 	AddGearObjects(Latest, Before, Alpha, Draw);
+	AddFieldSeeThroughHoles(Latest, Before, Alpha, Mesh, Options, Draw);
 	AddGearCloths(Latest, Before, Alpha, Mesh, Draw);
 	AddFieldPictureStretch(Scene, Latest, Before, Alpha, Mesh, Draw);
 	FFieldDrawBuilder Builder(Scene, Latest.Scenery, Latest.Characters, Latest.Quads, Latest.Particles, Mesh, Draw, &Latest.Gears, &Latest.SpriteModels, TexelKinds);

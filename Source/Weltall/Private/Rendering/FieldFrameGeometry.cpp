@@ -204,11 +204,12 @@ void AddFieldCharacterQuads(const Weltall::FFieldFrame& Latest, const Weltall::F
 	}
 }
 
-void AddFieldSeeThroughHoles(const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha, const FFieldRenderOptions& Options,
-	FFieldSceneDraw& Draw)
+void AddFieldSeeThroughHoles(const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha, const FFieldSceneMesh& Mesh,
+	const FFieldRenderOptions& Options, FFieldSceneDraw& Draw)
 {
 	Draw.SeeThroughHoles.Reset();
-	Draw.SeeThroughObject = static_cast<uint32>(Draw.Objects.Num() / 3 - 1);
+	// The identity follows the scenery's models; the gears' rows follow it.
+	Draw.SeeThroughObject = Mesh.FirstGearObject() - 1;
 	if (Options.SeeThrough == Weltall::EFieldSeeThrough::Off)
 	{
 		return;
@@ -233,6 +234,44 @@ void AddFieldSeeThroughHoles(const Weltall::FFieldFrame& Latest, const Weltall::
 			{
 				const FVector3f At = ToVector(Entry.Quad.ViewCorner(Corner)) + Offset;
 				Corners.Add({At.X, At.Y, At.Z});
+			}
+		}
+		if (!Corners.IsEmpty())
+		{
+			Draw.SeeThroughHoles.Add(Weltall::SeeThroughHoleOf(std::span<const std::array<float, 3>>(Corners.GetData(), static_cast<std::size_t>(Corners.Num()))));
+		}
+	}
+	// A gear's model that stands in for a member: its bones' parts' vertices, where their rows draw them.
+	const std::vector<Weltall::FFieldGearLayoutItem>& Items = Latest.Gears.Items;
+	const int32 FirstGear = static_cast<int32>(Mesh.FirstGearObject());
+	if (!Draw.bGearsDrawn || Items.size() != Latest.Gears.Objects.size())
+	{
+		return;
+	}
+	for (const int32 Slot : Latest.SeenThroughGearSlots)
+	{
+		if (Draw.SeeThroughHoles.Num() == static_cast<int32>(Weltall::FieldSeeThroughHoles))
+		{
+			break;
+		}
+		Corners.Reset();
+		for (int32 Object = 0; Object < static_cast<int32>(Items.size()); ++Object)
+		{
+			const Weltall::FFieldGearLayoutItem& Item = Items[static_cast<std::size_t>(Object)];
+			const int32 Row = (FirstGear + Object) * 3;
+			if (Item.Slot != Slot || Item.Part == nullptr || Item.Packets == nullptr || !Latest.Gears.Objects[static_cast<std::size_t>(Object)].bDrawn
+				|| !Draw.Objects.IsValidIndex(Row + 2))
+			{
+				continue;
+			}
+			const FVector4f& X = Draw.Objects[Row];
+			const FVector4f& Y = Draw.Objects[Row + 1];
+			const FVector4f& Z = Draw.Objects[Row + 2];
+			for (const Weltall::FGteVector& Vertex : Item.Part->Vertices)
+			{
+				const FVector4f Model(Vertex[0], Vertex[1], Vertex[2], 1.0f);
+				const auto Dot = [&Model](const FVector4f& Rows) { return Rows.X * Model.X + Rows.Y * Model.Y + Rows.Z * Model.Z + Rows.W; };
+				Corners.Add({Dot(X), Dot(Y), Dot(Z)});
 			}
 		}
 		if (!Corners.IsEmpty())

@@ -192,6 +192,11 @@ namespace Weltall
 		std::vector<FFieldScrolledModel> ScrolledModels;
 		std::vector<FFieldCharacterView> Characters;
 		std::vector<FFieldCharacterQuad> Quads;
+		/**
+		 * The gears' layout slots (FFieldGearLayoutItem::Slot) whose models stand in for the party's sprites outside
+		 * cutscenes: the scenery in front of them may be seen through about them, as about a member's sprite.
+		 */
+		std::vector<int32> SeenThroughGearSlots;
 		std::vector<FFieldParticleQuad> Particles;
 		FFieldBackdrop Backdrop;
 		/** The gears' models as the tick drew them. */

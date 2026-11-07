@@ -27,6 +27,11 @@ TEST_CASE("Only the actors in the party's filled slots are seen through", "[Fiel
 	// The third slot is empty: its actor left over from a member gone does not count.
 	CHECK_FALSE(IsPartyActor(Context, 9));
 	CHECK_FALSE(IsPartyActor(Context, 5));
+	// The one the player walks is seen through too, whatever stands in its slot (a gear, say).
+	Context.LeaderActor = 11;
+	CHECK(IsSeenThroughActor(Context, 11));
+	CHECK(IsSeenThroughActor(Context, 4));
+	CHECK_FALSE(IsSeenThroughActor(Context, 5));
 }
 
 TEST_CASE("A sprite's hole runs from its feet to its head, as wide as its quads", "[Field]")

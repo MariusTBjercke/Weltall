@@ -175,10 +175,12 @@ void AddFieldCharacterQuads(const Weltall::FFieldFrame& Latest, const Weltall::F
 
 /**
  * The holes of the party's sprites the frame marks (FFieldCharacterView::bSeenThrough), where they are drawn Alpha of the
- * way from Previous, in the space of the identity's rows the quads are drawn by; none while the options' SeeThrough is off.
+ * way from Previous, and of the gears' models that stand in for them (FFieldFrame::SeenThroughGearSlots), where their
+ * parts' rows draw them; in the space of the identity's rows the quads are drawn by. None while the options' SeeThrough
+ * is off. After the gears' objects' rows are added.
  */
-void AddFieldSeeThroughHoles(const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha, const FFieldRenderOptions& Options,
-	FFieldSceneDraw& Draw);
+void AddFieldSeeThroughHoles(const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha, const FFieldSceneMesh& Mesh,
+	const FFieldRenderOptions& Options, FFieldSceneDraw& Draw);
 
 /** The particles' quads as dynamic corners, their states and colours, each drawn between its two ticks' corners and colours. */
 void AddFieldParticleQuads(const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha, const FFieldSceneMesh& Mesh,

@@ -27,6 +27,11 @@ namespace Weltall
 		return false;
 	}
 
+	bool IsSeenThroughActor(const FEventContext& Context, int32 Actor)
+	{
+		return IsPartyActor(Context, Actor) || Actor == Context.LeaderActor;
+	}
+
 	FFieldSeeThroughHole SeeThroughHoleOf(std::span<const std::array<float, 3>> Corners)
 	{
 		FFieldSeeThroughHole Hole;

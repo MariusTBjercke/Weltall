@@ -280,6 +280,7 @@ namespace Weltall
 		}
 		Frame.Characters.clear();
 		Frame.Quads.clear();
+		Frame.SeenThroughGearSlots.clear();
 		SceneBeforeTick.reset();
 		// The map's first ticks draw nothing but the screen's 2D layer, over black.
 		const bool bSceneDrawn = Runtime.Context().SettleTicks == 0;
@@ -326,11 +327,13 @@ namespace Weltall
 		{
 			HeldCharacters.assign(Frame.Characters.begin(), Frame.Characters.end());
 			HeldQuads.assign(Frame.Quads.begin(), Frame.Quads.end());
+			HeldGearSlots.assign(Frame.SeenThroughGearSlots.begin(), Frame.SeenThroughGearSlots.end());
 		}
 		else
 		{
 			Frame.Characters.assign(HeldCharacters.begin(), HeldCharacters.end());
 			Frame.Quads.assign(HeldQuads.begin(), HeldQuads.end());
+			Frame.SeenThroughGearSlots.assign(HeldGearSlots.begin(), HeldGearSlots.end());
 		}
 		if (bNewMap)
 		{
@@ -624,6 +627,13 @@ namespace Weltall
 		if (GearModels && TickingRuntime != nullptr && (bGearModelsInCutscenes || !CutsceneWatch.InCutscene())
 			&& GearModels->Follow(*TickingRuntime, Actor, Looked, Pass, FieldVram, Look.Gear))
 		{
+			// The party's gear drawn as its model: the scenery in front of the model may be seen through about it.
+			const std::optional<int32> Slot = GearModels->LayoutSlotOf(Actor);
+			if (Slot && Context != nullptr && !CutsceneWatch.InCutscene() && IsSeenThroughActor(*Context, Actor)
+				&& std::find(Drawn->SeenThroughGearSlots.begin(), Drawn->SeenThroughGearSlots.end(), *Slot) == Drawn->SeenThroughGearSlots.end())
+			{
+				Drawn->SeenThroughGearSlots.push_back(*Slot);
+			}
 			return;
 		}
 		const FSprite* Shown = &Looked;
@@ -658,7 +668,7 @@ namespace Weltall
 		View.Origin = ToFloat(Used.Matrix.T);
 		View.World = Whole(Sprite.Position);
 		View.Clip = Pass.Clip;
-		View.bSeenThrough = Context != nullptr && !CutsceneWatch.InCutscene() && IsPartyActor(*Context, Actor);
+		View.bSeenThrough = Context != nullptr && !CutsceneWatch.InCutscene() && IsSeenThroughActor(*Context, Actor);
 		const uint16 Character = static_cast<uint16>(Drawn->Characters.size() - 1);
 		for (const FSpriteQuad& Part : Parts)
 		{
