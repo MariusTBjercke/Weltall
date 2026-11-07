@@ -103,6 +103,15 @@ namespace Weltall
 		Solid,
 	};
 
+	/** Whether the scenery standing between the eye and a party member is drawn see-through about that member. */
+	enum class EFieldSeeThrough : uint8
+	{
+		/** As the original draws it: what stands in front hides the party. */
+		Off,
+		/** Outside cutscenes, a dithered hole about each member on foot in what stands in front of them (FieldSeeThrough.h). */
+		On,
+	};
+
 	/**
 	 * The ways the field can be presented, each the player's choice. The defaults sort everything by depth (the
 	 * scenery's decals in the original's order), keep the texels sharp, smooth only polygon edges, draw
@@ -130,6 +139,7 @@ namespace Weltall
 		EBattleFlashes BattleFlashes = EBattleFlashes::Original;
 		EMessageBoxScale MessageBoxScale = EMessageBoxScale::Original;
 		EMessageBoxBackground MessageBoxBackground = EMessageBoxBackground::Original;
+		EFieldSeeThrough SeeThrough = EFieldSeeThrough::On;
 
 		bool operator==(const FFieldRenderOptions&) const = default;
 	};

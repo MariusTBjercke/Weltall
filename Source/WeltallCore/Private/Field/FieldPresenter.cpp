@@ -7,6 +7,7 @@
 #include "Field/FieldRuntime.h"
 #include "Field/FieldScenePictures.h"
 #include "Field/FieldScreenLayer.h"
+#include "Field/FieldSeeThrough.h"
 #include "Field/FieldSprites.h"
 #include "Field/FieldTextureRegions.h"
 #include "Formats/Tim.h"
@@ -657,6 +658,7 @@ namespace Weltall
 		View.Origin = ToFloat(Used.Matrix.T);
 		View.World = Whole(Sprite.Position);
 		View.Clip = Pass.Clip;
+		View.bSeenThrough = Context != nullptr && !CutsceneWatch.InCutscene() && IsPartyActor(*Context, Actor);
 		const uint16 Character = static_cast<uint16>(Drawn->Characters.size() - 1);
 		for (const FSpriteQuad& Part : Parts)
 		{

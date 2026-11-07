@@ -33,6 +33,8 @@ namespace Weltall
 		std::array<int32, 3> World{};
 		/** A shadow lying on its floor, rather than a sprite facing the screen. */
 		bool bOnFloor = false;
+		/** A party member's sprite outside cutscenes: the scenery in front of it may be seen through about it (EFieldSeeThrough). */
+		bool bSeenThrough = false;
 		/** Which of the sprite's pieces the pass drew: all of them, or those on one side of its wading line. */
 		ESpriteClip Clip = ESpriteClip::None;
 	};
