@@ -158,7 +158,7 @@ namespace Weltall
 		void UploadMapTextureStream(FFieldRuntime& Runtime);
 		/** The stream again when the runtime has brought it in again since the last frame (after a movie). */
 		void FollowTextureStreams(FFieldRuntime& Runtime);
-		void OrderFrame(FFieldFrame& Frame, int32 FarBucketShift);
+		void OrderFrame(FFieldFrame& Frame);
 		/** Select's picture into VRAM as it comes up (the area it takes kept aside), and VRAM given back once it has gone. */
 		std::optional<FError> FollowMapPicture(const FFieldMapPicture& Picture);
 

@@ -440,7 +440,7 @@ namespace Weltall
 		{
 			return ParticleError;
 		}
-		OrderFrame(Frame, Shown.FarBucketShift);
+		OrderFrame(Frame);
 		WriteOverScreen();
 		Frame.ScreenInVram.assign(ScreenInVram.begin(), ScreenInVram.end());
 		DrawFieldCompass(Context.Render.Compass, DrawingTables.Compass, Shown.View.Rotation, Shown.View.Pitch, CompassFrame);
