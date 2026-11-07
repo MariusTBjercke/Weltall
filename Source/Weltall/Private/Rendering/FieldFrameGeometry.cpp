@@ -299,54 +299,106 @@ void MarkFieldSeeThroughModels(const Weltall::FFieldScene& Scene, const Weltall:
 			Samples.Add(Sample);
 		}
 	}
+	const std::array<float, 3> Up{Draw.FloorUp.X, Draw.FloorUp.Y, Draw.FloorUp.Z};
+	const bool bUp = !Draw.FloorUp.IsZero();
 	const TConstArrayView<FFieldSceneCorner> MeshCorners = Mesh.CornerList();
-	const auto ViewOf = [&Draw](const FFieldSceneCorner& Corner)
+	const auto Place = [&Draw](uint32 Object, const FVector3f& Point)
 	{
-		const int32 Row = static_cast<int32>(Corner.Object) * 3;
+		const int32 Row = static_cast<int32>(Object) * 3;
 		if (!Draw.Objects.IsValidIndex(Row + 2))
 		{
 			return std::array<float, 3>{0.0f, 0.0f, 0.0f};
 		}
-		const auto Dot = [&Corner](const FVector4f& Rows) { return Rows.X * Corner.Position.X + Rows.Y * Corner.Position.Y + Rows.Z * Corner.Position.Z + Rows.W; };
+		const auto Dot = [&Point](const FVector4f& Rows) { return Rows.X * Point.X + Rows.Y * Point.Y + Rows.Z * Point.Z + Rows.W; };
 		return std::array<float, 3>{Dot(Draw.Objects[Row]), Dot(Draw.Objects[Row + 1]), Dot(Draw.Objects[Row + 2])};
 	};
-	// A placed model one of whose drawn triangles stands between the eye and the party: all of it may be seen through.
-	TBitArray<> Hiding(false, static_cast<int32>(Scene.Objects.size()));
+	// Per placed model: drawn with polygons that may be seen through, standing between the eye and the party, bearing one of them.
+	const int32 Objects = static_cast<int32>(Scene.Objects.size());
+	TBitArray<> Seeable(false, Objects);
+	TBitArray<> Hit(false, Objects);
+	TBitArray<> Bearing(false, Objects);
 	const uint32 SceneryPolygons = FMath::Min<uint32>(static_cast<uint32>(Scene.Polygons.size()), Mesh.FirstGearPolygon());
 	for (uint32 Polygon = 0; Polygon < SceneryPolygons && Polygon < Latest.Scenery.Polygons.size(); ++Polygon)
 	{
 		const int32 Object = static_cast<int32>(Scene.Polygons[Polygon].Object);
-		if (!Hiding.IsValidIndex(Object) || Hiding[Object] || !Latest.Scenery.Polygons[Polygon].bDrawn
-			|| (Mesh.States()[static_cast<int32>(Polygon)].Flags & FieldPolygonFlags::SeeThrough) == 0)
+		if (Object >= Objects || !Latest.Scenery.Polygons[Polygon].bDrawn || (Mesh.States()[static_cast<int32>(Polygon)].Flags & FieldPolygonFlags::SeeThrough) == 0)
+		{
+			continue;
+		}
+		Seeable[Object] = true;
+		if (Hit[Object] && (Bearing[Object] || !bUp))
 		{
 			continue;
 		}
 		const bool bRedirected = Draw.Redirects.IsValidIndex(static_cast<int32>(Polygon)) && Draw.Redirects[Polygon] != FFieldSceneDraw::NoRedirect;
 		const uint32 First = bRedirected ? Draw.Redirects[Polygon] : Mesh.FirstCorner(Polygon);
 		const uint32 Count = Mesh.CornerCount(Polygon);
-		const auto CornerAt = [&](uint32 Number) -> const FFieldSceneCorner&
+		const auto ViewAt = [&](uint32 Number)
 		{
-			return bRedirected ? Draw.DynamicCorners[static_cast<int32>(First + Number)] : MeshCorners[static_cast<int32>(First + Number)];
+			const FFieldSceneCorner& Corner = bRedirected ? Draw.DynamicCorners[static_cast<int32>(First + Number)] : MeshCorners[static_cast<int32>(First + Number)];
+			return Place(Corner.Object, Corner.Position);
 		};
-		for (uint32 Triangle = 0; Triangle + 2 < Count && !Hiding[Object]; Triangle += 3)
+		for (uint32 Triangle = 0; Triangle + 2 < Count; Triangle += 3)
 		{
-			const std::array<float, 3> A = ViewOf(CornerAt(Triangle));
-			const std::array<float, 3> B = ViewOf(CornerAt(Triangle + 1));
-			const std::array<float, 3> C = ViewOf(CornerAt(Triangle + 2));
-			for (const std::array<float, 3>& Sample : Samples)
+			const std::array<float, 3> A = ViewAt(Triangle);
+			const std::array<float, 3> B = ViewAt(Triangle + 1);
+			const std::array<float, 3> C = ViewAt(Triangle + 2);
+			for (int32 Sample = 0; Sample < Samples.Num() && !Hit[Object]; ++Sample)
 			{
-				if (Weltall::HidesFromEye(Sample, A, B, C))
-				{
-					Hiding[Object] = true;
-					break;
-				}
+				Hit[Object] = Weltall::HidesFromEye(Samples[Sample], A, B, C);
+			}
+			for (int32 Hole = 0; bUp && Hole < Draw.SeeThroughHoles.Num() && !Bearing[Object]; ++Hole)
+			{
+				Bearing[Object] = Weltall::BearsSprite(Draw.SeeThroughHoles[Hole], Up, A, B, C);
+			}
+		}
+	}
+	// What a member stands on is never seen through; what hides one is, and so are the models it touches that stand above
+	// that member's feet and in front of it, so a bridge or a wall made of several is seen through as one.
+	TBitArray<> Hiding(false, Objects);
+	TArray<FVector4f> Spheres;
+	Spheres.SetNumZeroed(Objects);
+	for (int32 Object = 0; Object < Objects; ++Object)
+	{
+		Hiding[Object] = Hit[Object] && !Bearing[Object];
+		const Weltall::FFieldModelBounds& Bounds = Scene.Objects[static_cast<std::size_t>(Object)].Bounds;
+		const std::array<float, 3> Centre = Place(static_cast<uint32>(Object), FVector3f(Bounds.Centre[0], Bounds.Centre[1], Bounds.Centre[2]));
+		const int32 Row = Object * 3;
+		const float Scale = Draw.Objects.IsValidIndex(Row) ? FVector3f(Draw.Objects[Row].X, Draw.Objects[Row].Y, Draw.Objects[Row].Z).Size() : 1.0f;
+		Spheres[Object] = FVector4f(Centre[0], Centre[1], Centre[2], static_cast<float>(Bounds.Radius) * Scale);
+	}
+	const TBitArray<> Struck = Hiding;
+	for (int32 Object = 0; Object < Objects; ++Object)
+	{
+		if (Hiding[Object] || !Seeable[Object] || Bearing[Object])
+		{
+			continue;
+		}
+		const FVector4f& Sphere = Spheres[Object];
+		bool bInFront = false;
+		for (const Weltall::FFieldSeeThroughHole& Hole : Draw.SeeThroughHoles)
+		{
+			const float Above = bUp ? (Sphere.X - Hole.Feet[0]) * Up[0] + (Sphere.Y - Hole.Feet[1]) * Up[1] + (Sphere.Z - Hole.Feet[2]) * Up[2] : Hole.Feet[1] - Sphere.Y;
+			bInFront = bInFront || (Above > 0.0f && Sphere.Z < FMath::Min(Hole.Feet[2], Hole.Head[2]));
+		}
+		if (!bInFront)
+		{
+			continue;
+		}
+		for (int32 Other = 0; Other < Objects; ++Other)
+		{
+			const FVector4f& Touched = Spheres[Other];
+			if (Struck[Other] && FVector3f(Sphere.X - Touched.X, Sphere.Y - Touched.Y, Sphere.Z - Touched.Z).Size() <= Sphere.W + Touched.W)
+			{
+				Hiding[Object] = true;
+				break;
 			}
 		}
 	}
 	for (uint32 Polygon = 0; Polygon < SceneryPolygons; ++Polygon)
 	{
 		const int32 Object = static_cast<int32>(Scene.Polygons[Polygon].Object);
-		if (!Hiding.IsValidIndex(Object) || !Hiding[Object] || !Draw.Colors.IsValidIndex(static_cast<int32>(Polygon)))
+		if (Object >= Objects || !Hiding[Object] || !Draw.Colors.IsValidIndex(static_cast<int32>(Polygon)))
 		{
 			continue;
 		}

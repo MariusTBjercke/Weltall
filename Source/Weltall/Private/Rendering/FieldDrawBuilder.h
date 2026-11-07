@@ -185,8 +185,9 @@ void AddFieldSeeThroughHoles(const Weltall::FFieldScene& Scene, const Weltall::F
 	const FFieldSceneMesh& Mesh, const FFieldRenderOptions& Options, FFieldSceneDraw& Draw);
 
 /**
- * Marks the scenery's placed models that stand between the eye and one of the holes' sprites (FieldColorFlags::SeeThrough):
- * only those are seen through, the rest of the scenery about the party drawn as it is.
+ * Marks the scenery's placed models that stand between the eye and one of the holes' sprites (FieldColorFlags::SeeThrough),
+ * and those touching them that stand above that sprite's feet and in front of it; never one a sprite stands on. Only
+ * those are seen through, the rest of the scenery about the party drawn as it is.
  */
 void MarkFieldSeeThroughModels(const Weltall::FFieldScene& Scene, const Weltall::FFieldFrame& Latest, const FFieldSceneMesh& Mesh, FFieldSceneDraw& Draw);
 

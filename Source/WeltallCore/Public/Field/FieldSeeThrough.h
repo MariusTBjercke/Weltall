@@ -68,6 +68,13 @@ namespace Weltall
 	WELTALLCORE_API bool HidesFromEye(const std::array<float, 3>& To, const std::array<float, 3>& A, const std::array<float, 3>& B, const std::array<float, 3>& C);
 
 	/**
+	 * Whether the triangle A B C crosses the sprite's footing: a short stretch of the world's up (Up, unit length, view
+	 * space) through its feet. The placed model it belongs to is what the sprite stands on, never seen through.
+	 */
+	WELTALLCORE_API bool BearsSprite(const FFieldSeeThroughHole& Hole, const std::array<float, 3>& Up, const std::array<float, 3>& A, const std::array<float, 3>& B,
+		const std::array<float, 3>& C);
+
+	/**
 	 * How much of the scenery at View (view space) the hole takes away: 0 none, 1 all. Up is the world's up in view space
 	 * (unit length); without one (zero), what lies below the sprite's feet on the screen is kept instead. FieldScene.usf's
 	 * SeeThroughShare is the same.

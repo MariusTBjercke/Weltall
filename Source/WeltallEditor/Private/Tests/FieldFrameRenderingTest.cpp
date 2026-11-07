@@ -611,16 +611,21 @@ bool FFieldSeeThroughModelsRenderingTest::RunTest(const FString&)
 	BeginInitResource(&Units);
 	Units.Follow(Vram);
 
-	// A party member's sprite 2000 units away over the screen's (152, 96)-(168, 128), and two placed models 1000 units
-	// away: a blue platform beside it, within its bubble but hiding none of it, and a green wall over it.
+	// A party member's sprite 2000 units away over the screen's (152, 96)-(168, 128), and placed models 1000 units away
+	// (their bounds about them, in model units, two to a pixel): a blue platform apart from it, within its bubble but
+	// hiding none of it; a green wall over it; and a yellow piece of the same wall beside it, touching it.
 	const auto Render = [&Units](Weltall::EFieldSeeThrough SeeThrough)
 	{
 		FTestFrame Test;
 		Test.Sprite(152, 96, 2000);
 		Test.Frame.Characters.back().bSeenThrough = true;
-		Test.Quad(110, 80, 150, 150, FlatQuad, {0, 0, 200});
+		Test.Quad(100, 104, 130, 120, FlatQuad, {0, 0, 200});
 		Test.Quad(154, 100, 166, 124, FlatQuad, {0, 200, 0});
-		Test.Evaluate({1, 1});
+		Test.Quad(166, 100, 200, 124, FlatQuad, {200, 200, 0});
+		Test.Evaluate({1, 1, 1});
+		Test.Scene.Objects[0].Bounds = {{-90, 0, 0}, 34};
+		Test.Scene.Objects[1].Bounds = {{0, 0, 0}, 27};
+		Test.Scene.Objects[2].Bounds = {{46, 0, 0}, 40};
 		return Test.Render(Units, nullptr, 1.0f, EFieldSorting::DepthBufferWithScenery, SeeThrough);
 	};
 	const auto At = [](const TArray<FColor>& Pixels, int32 X, int32 Y) { return Pixels[Y * ScreenWidth + X]; };
@@ -628,7 +633,8 @@ bool FFieldSeeThroughModelsRenderingTest::RunTest(const FString&)
 	const TArray<FColor> Seen = Render(Weltall::EFieldSeeThrough::On);
 	TestFalse(TEXT("off: the wall hides the sprite"), IsNear(At(Hidden, 157, 112), 255, 0, 0));
 	TestTrue(TEXT("on: the sprite shows through the wall that hides it"), IsNear(At(Seen, 157, 112), 255, 0, 0));
-	TestEqual(TEXT("on: the platform beside it, hiding none of it, is kept"), At(Seen, 140, 112), At(Hidden, 140, 112));
+	TestEqual(TEXT("on: the platform apart from it, hiding none of it, is kept"), At(Seen, 115, 112), At(Hidden, 115, 112));
+	TestNotEqual(TEXT("on: the piece of the wall touching the one that hides it is seen through with it"), At(Seen, 172, 112), At(Hidden, 172, 112));
 	BeginReleaseResource(&Units);
 	FlushRenderingCommands();
 	return true;

@@ -93,3 +93,16 @@ TEST_CASE("Only what stands between the eye and a point hides it", "[Field]")
 	// Along the ray, edge on: it does not.
 	CHECK_FALSE(HidesFromEye(To, {0.0f, -100.0f, 400.0f}, {0.0f, 100.0f, 400.0f}, {0.0f, 0.0f, 600.0f}));
 }
+
+TEST_CASE("The ground under a sprite's feet bears it, and nothing else does", "[Field]")
+{
+	const FFieldSeeThroughHole Hole = StandingSprite();
+	const std::array<float, 3> Up{0.0f, -1.0f, 0.0f};
+	// A floor under its feet, level or a little below them.
+	CHECK(BearsSprite(Hole, Up, {-50.0f, 0.0f, 950.0f}, {50.0f, 0.0f, 950.0f}, {0.0f, 0.0f, 1100.0f}));
+	CHECK(BearsSprite(Hole, Up, {-50.0f, 4.0f, 950.0f}, {50.0f, 4.0f, 950.0f}, {0.0f, 4.0f, 1100.0f}));
+	// A floor beside it, a ceiling over its head, a wall in front of it: none bears it.
+	CHECK_FALSE(BearsSprite(Hole, Up, {150.0f, 0.0f, 950.0f}, {250.0f, 0.0f, 950.0f}, {200.0f, 0.0f, 1100.0f}));
+	CHECK_FALSE(BearsSprite(Hole, Up, {-50.0f, -40.0f, 950.0f}, {50.0f, -40.0f, 950.0f}, {0.0f, -40.0f, 1100.0f}));
+	CHECK_FALSE(BearsSprite(Hole, Up, {-100.0f, -100.0f, 500.0f}, {100.0f, -100.0f, 500.0f}, {0.0f, 100.0f, 500.0f}));
+}

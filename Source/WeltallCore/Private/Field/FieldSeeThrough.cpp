@@ -73,41 +73,63 @@ namespace Weltall
 		return {Along(0.25f, 0.0f), Along(0.55f, 0.0f), Along(0.85f, 0.0f), Along(0.55f, -0.6f), Along(0.55f, 0.6f)};
 	}
 
+	namespace
+	{
+		using FPoint = std::array<float, 3>;
+
+		FPoint Sub(const FPoint& X, const FPoint& Y) { return {X[0] - Y[0], X[1] - Y[1], X[2] - Y[2]}; }
+		float Dot(const FPoint& X, const FPoint& Y) { return X[0] * Y[0] + X[1] * Y[1] + X[2] * Y[2]; }
+		FPoint Cross(const FPoint& X, const FPoint& Y) { return {X[1] * Y[2] - X[2] * Y[1], X[2] * Y[0] - X[0] * Y[2], X[0] * Y[1] - X[1] * Y[0]}; }
+
+		/** Where the stretch From to To crosses the triangle A B C, as a share of the way (Moller and Trumbore); below 0 for nowhere. */
+		float Crossing(const FPoint& From, const FPoint& To, const FPoint& A, const FPoint& B, const FPoint& C)
+		{
+			const FPoint Way = Sub(To, From);
+			const FPoint EdgeB = Sub(B, A);
+			const FPoint EdgeC = Sub(C, A);
+			const FPoint Across = Cross(Way, EdgeC);
+			const float Determinant = Dot(EdgeB, Across);
+			if (std::abs(Determinant) < 1e-6f)
+			{
+				return -1.0f;
+			}
+			const float Inverse = 1.0f / Determinant;
+			const FPoint FromA = Sub(From, A);
+			const float U = Dot(FromA, Across) * Inverse;
+			if (U < 0.0f || U > 1.0f)
+			{
+				return -1.0f;
+			}
+			const FPoint Up = Cross(FromA, EdgeB);
+			const float V = Dot(Way, Up) * Inverse;
+			if (V < 0.0f || U + V > 1.0f)
+			{
+				return -1.0f;
+			}
+			const float Share = Dot(EdgeC, Up) * Inverse;
+			return Share >= 0.0f && Share <= 1.0f ? Share : -1.0f;
+		}
+	}
+
 	bool HidesFromEye(const std::array<float, 3>& To, const std::array<float, 3>& A, const std::array<float, 3>& B, const std::array<float, 3>& C)
 	{
-		// The ray from the eye to To, as Moller and Trumbore cross it with the triangle: Hit is the share of the way.
-		const auto Sub = [](const std::array<float, 3>& X, const std::array<float, 3>& Y) { return std::array<float, 3>{X[0] - Y[0], X[1] - Y[1], X[2] - Y[2]}; };
-		const auto Dot = [](const std::array<float, 3>& X, const std::array<float, 3>& Y) { return X[0] * Y[0] + X[1] * Y[1] + X[2] * Y[2]; };
-		const auto Cross = [](const std::array<float, 3>& X, const std::array<float, 3>& Y)
-		{ return std::array<float, 3>{X[1] * Y[2] - X[2] * Y[1], X[2] * Y[0] - X[0] * Y[2], X[0] * Y[1] - X[1] * Y[0]}; };
 		const float Distance = std::sqrt(Dot(To, To));
 		if (Distance <= FieldSeeThrough::DepthMargin)
 		{
 			return false;
 		}
-		const std::array<float, 3> EdgeB = Sub(B, A);
-		const std::array<float, 3> EdgeC = Sub(C, A);
-		const std::array<float, 3> Across = Cross(To, EdgeC);
-		const float Determinant = Dot(EdgeB, Across);
-		if (std::abs(Determinant) < 1e-6f)
-		{
-			return false;
-		}
-		const float Inverse = 1.0f / Determinant;
-		const std::array<float, 3> FromA = Sub({0.0f, 0.0f, 0.0f}, A);
-		const float U = Dot(FromA, Across) * Inverse;
-		if (U < 0.0f || U > 1.0f)
-		{
-			return false;
-		}
-		const std::array<float, 3> Up = Cross(FromA, EdgeB);
-		const float V = Dot(To, Up) * Inverse;
-		if (V < 0.0f || U + V > 1.0f)
-		{
-			return false;
-		}
-		const float Hit = Dot(EdgeC, Up) * Inverse;
-		return Hit > 0.0f && Hit < 1.0f - FieldSeeThrough::DepthMargin / Distance;
+		const float Share = Crossing({0.0f, 0.0f, 0.0f}, To, A, B, C);
+		return Share > 0.0f && Share < 1.0f - FieldSeeThrough::DepthMargin / Distance;
+	}
+
+	bool BearsSprite(const FFieldSeeThroughHole& Hole, const std::array<float, 3>& Up, const std::array<float, 3>& A, const std::array<float, 3>& B,
+		const std::array<float, 3>& C)
+	{
+		// A third of its height above and below its feet: the ground it stands on, however the floor slopes.
+		const float Reach = std::sqrt(Dot(Sub(Hole.Head, Hole.Feet), Sub(Hole.Head, Hole.Feet))) / 3.0f;
+		const FPoint Above{Hole.Feet[0] + Up[0] * Reach, Hole.Feet[1] + Up[1] * Reach, Hole.Feet[2] + Up[2] * Reach};
+		const FPoint Below{Hole.Feet[0] - Up[0] * Reach, Hole.Feet[1] - Up[1] * Reach, Hole.Feet[2] - Up[2] * Reach};
+		return Crossing(Above, Below, A, B, C) >= 0.0f;
 	}
 
 	float SeeThroughShare(const FFieldSeeThroughHole& Hole, const std::array<float, 3>& View, const std::array<float, 3>& Up)
