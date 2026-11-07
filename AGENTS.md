@@ -59,7 +59,9 @@ python Scripts/package.py Development        # compile, cook, stage, then run a 
 The full log of a build is `out/builds/<Configuration>.log`; the check's log is
 `out/builds/<Configuration>-check.log`. `package.py` prints nothing while it compiles, so watch the log
 file for progress. A cold `Development` build took **6 minutes** on this machine (~790 compile units in
-the editor target, then the game target, the cook and the 60-second check).
+the editor target, then the game target, the cook and the 60-second check). **The edit loop is about
+2.5 minutes**: a one-file change recompiles that file, links, cooks, stages and runs the check — measured
+end to end, including the 60-second check itself.
 
 ### One local change to `package.py`
 
@@ -120,6 +122,7 @@ Re-verify before contradicting any of these; each has a one-line check.
 | `BootstrapPackagedGame` sources are absent from the installed engine | `Test-Path "C:\Program Files\Epic Games\UE_5.8\Engine\Source\Programs\BootstrapPackagedGame"` is `False` |
 | `WeltallEditor` needs 790 compile units on a cold build | count `[n/790]` lines in `out/builds/Development.log` |
 | A cold `Development` build took 6 min and produced a 1.66 GB package | the `built in N min` line in the build's output, 2026-11-07 |
+| A one-file source change reaches the running game in ~2.5 min | a temporary `UE_LOG` marker in `GameLoopScreen.cpp` recompiled once, linked, and appeared in `Development-check.log`; 2026-11-07 |
 | Version lives in exactly one place | `git grep -n "ProjectVersion=" -- Config` → `Config/DefaultGame.ini` |
 | Settings and saves live outside the repo | `%LOCALAPPDATA%\Weltall` (`Saved/`), crashes in `Saved/Crashes` |
 | Discs are git-ignored and never packaged | `.gitignore` has `/Games/`; `archive()` skips `Games`, `Assets`, `Mods` |

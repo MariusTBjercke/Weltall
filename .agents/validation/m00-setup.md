@@ -109,6 +109,39 @@ The message was: Explicitly skipping tests during runtime requires exceptions
 The same binary run against a disc that *is* present returns `00000000` and passes. The exact 19 are
 snapshotted in `.agents/tests/expected-aborts.txt`, so a failure outside that set is a real regression.
 
+## The edit loop, proved with a real change
+
+A throwaway `UE_LOG(LogWeltall, Log, TEXT("BUILD-LOOP-MARKER-4711"));` was added to
+`Source/Weltall/Private/Screens/GameLoopScreen.cpp`, committed as `a65c512` (**never pushed**), and
+built with `.\Scripts\build.ps1`:
+
+```console
+$ .\Scripts\build.ps1
+Exporting a65c512 into out\package\Weltall
+  BUILD SUCCESSFUL
+Development: built in 1 min: out\builds\Development\Windows\Weltall.exe
+Development: ran for 60 s (log: out\builds\Development-check.log)
+=== WALL CLOCK: 2.5 min (148 s) ===
+```
+
+The build log shows exactly one file recompiled and one link:
+
+```
+[1/4] Compile [x64] GameLoopScreen.cpp
+[1/3] Compile [x64] GameLoopScreen.cpp
+[2/3] Link [x64] Weltall.exe
+```
+
+And the change is in the running game, in its own log:
+
+```
+[2026.11.07-12.16.05:490][803]LogWeltall: BUILD-LOOP-MARKER-4711
+[2026.11.07-12.16.08:224][678]LogWeltall: BUILD-LOOP-MARKER-4711
+```
+
+The commit was then dropped with `git reset --hard origin/main`, the tree rebuilt (130 s), and the
+marker confirmed absent from both the log and the play folder, which reports `Revision.txt` = `3953c9a`.
+
 ## Not proven
 
 - The game was started **headless** (`-nullrhi -nosound -unattended`) by the check. Nothing was played
