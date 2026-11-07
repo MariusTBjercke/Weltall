@@ -45,6 +45,8 @@
 
 // In the top byte of a polygon's first colour: this frame modulates its texels even when its packet draws them raw.
 #define COLOR_MODULATED (1u << 24)
+// In the same byte: its placed model stands between the eye and one of the party, and may be seen through about them.
+#define COLOR_SEE_THROUGH (1u << 25)
 
 // Which texels a draw keeps.
 #define PASS_OPAQUE 0
@@ -391,7 +393,7 @@ float4 MainPS(
 	out uint Coverage : SV_Coverage) : SV_Target0
 {
 	const FFieldPolygon Polygon = PolygonAt(PolygonIndex);
-	if ((Polygon.Flags & FLAG_SEE_THROUGH) != 0 && SeeThroughCount != 0)
+	if ((Polygon.Flags & FLAG_SEE_THROUGH) != 0 && (ColorFlags & COLOR_SEE_THROUGH) != 0 && SeeThroughCount != 0)
 	{
 		// The same in every pass of the polygon (its depth prepasses too), so no pass leaves depth where its colour is gone.
 		float Share = 0.0;

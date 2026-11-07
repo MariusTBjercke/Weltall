@@ -58,6 +58,58 @@ namespace Weltall
 		return Hole;
 	}
 
+	std::array<std::array<float, 3>, FieldSeeThroughSamples> SeeThroughSamples(const FFieldSeeThroughHole& Hole)
+	{
+		const auto Along = [&Hole](float Share, float Side)
+		{
+			std::array<float, 3> Point{};
+			for (std::size_t Axis = 0; Axis < 3; ++Axis)
+			{
+				Point[Axis] = Hole.Feet[Axis] + (Hole.Head[Axis] - Hole.Feet[Axis]) * Share;
+			}
+			Point[0] += Side * Hole.HalfWidth;
+			return Point;
+		};
+		return {Along(0.25f, 0.0f), Along(0.55f, 0.0f), Along(0.85f, 0.0f), Along(0.55f, -0.6f), Along(0.55f, 0.6f)};
+	}
+
+	bool HidesFromEye(const std::array<float, 3>& To, const std::array<float, 3>& A, const std::array<float, 3>& B, const std::array<float, 3>& C)
+	{
+		// The ray from the eye to To, as Moller and Trumbore cross it with the triangle: Hit is the share of the way.
+		const auto Sub = [](const std::array<float, 3>& X, const std::array<float, 3>& Y) { return std::array<float, 3>{X[0] - Y[0], X[1] - Y[1], X[2] - Y[2]}; };
+		const auto Dot = [](const std::array<float, 3>& X, const std::array<float, 3>& Y) { return X[0] * Y[0] + X[1] * Y[1] + X[2] * Y[2]; };
+		const auto Cross = [](const std::array<float, 3>& X, const std::array<float, 3>& Y)
+		{ return std::array<float, 3>{X[1] * Y[2] - X[2] * Y[1], X[2] * Y[0] - X[0] * Y[2], X[0] * Y[1] - X[1] * Y[0]}; };
+		const float Distance = std::sqrt(Dot(To, To));
+		if (Distance <= FieldSeeThrough::DepthMargin)
+		{
+			return false;
+		}
+		const std::array<float, 3> EdgeB = Sub(B, A);
+		const std::array<float, 3> EdgeC = Sub(C, A);
+		const std::array<float, 3> Across = Cross(To, EdgeC);
+		const float Determinant = Dot(EdgeB, Across);
+		if (std::abs(Determinant) < 1e-6f)
+		{
+			return false;
+		}
+		const float Inverse = 1.0f / Determinant;
+		const std::array<float, 3> FromA = Sub({0.0f, 0.0f, 0.0f}, A);
+		const float U = Dot(FromA, Across) * Inverse;
+		if (U < 0.0f || U > 1.0f)
+		{
+			return false;
+		}
+		const std::array<float, 3> Up = Cross(FromA, EdgeB);
+		const float V = Dot(To, Up) * Inverse;
+		if (V < 0.0f || U + V > 1.0f)
+		{
+			return false;
+		}
+		const float Hit = Dot(EdgeC, Up) * Inverse;
+		return Hit > 0.0f && Hit < 1.0f - FieldSeeThrough::DepthMargin / Distance;
+	}
+
 	float SeeThroughShare(const FFieldSeeThroughHole& Hole, const std::array<float, 3>& View, const std::array<float, 3>& Up)
 	{
 		using namespace FieldSeeThrough;

@@ -92,6 +92,8 @@ public:
 	/** The polygon's corners in the mesh, three per triangle it is drawn as. */
 	uint32 FirstCorner(uint32 Polygon) const { return PolygonCorners[Polygon]; }
 	uint32 CornerCount(uint32 Polygon) const { return PolygonCorners[Polygon + 1] - PolygonCorners[Polygon]; }
+	/** The mesh's corners, each in its object's space. */
+	TConstArrayView<FFieldSceneCorner> CornerList() const { return CornerData; }
 	uint32 Corners() const { return static_cast<uint32>(CornerData.Num()); }
 	/** The polygon a corner of the mesh belongs to. */
 	uint32 CornerPolygon(uint32 Corner) const { return CornerData[static_cast<int32>(Corner)].Polygon; }

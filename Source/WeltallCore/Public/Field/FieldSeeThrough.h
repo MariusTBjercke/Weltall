@@ -51,6 +51,22 @@ namespace Weltall
 	/** The hole about a sprite whose quads' corners in view space are Corners: none (zero width) for no corners. */
 	WELTALLCORE_API FFieldSeeThroughHole SeeThroughHoleOf(std::span<const std::array<float, 3>> Corners);
 
+	/** How many points of a sprite the eye looks for (SeeThroughSamples). */
+	inline constexpr std::size_t FieldSeeThroughSamples = 5;
+
+	/**
+	 * The points of a hole's sprite the eye looks for, in view space: up its middle from near its feet to near its head,
+	 * and to either side of its middle. A placed model of the scenery that stands between the eye and one of them hides
+	 * the sprite, and only such a model is seen through.
+	 */
+	WELTALLCORE_API std::array<std::array<float, 3>, FieldSeeThroughSamples> SeeThroughSamples(const FFieldSeeThroughHole& Hole);
+
+	/**
+	 * Whether the triangle A B C (view space, either side facing the eye) stands between the eye, at the origin, and
+	 * the point To, nearer than To by more than FieldSeeThrough::DepthMargin.
+	 */
+	WELTALLCORE_API bool HidesFromEye(const std::array<float, 3>& To, const std::array<float, 3>& A, const std::array<float, 3>& B, const std::array<float, 3>& C);
+
 	/**
 	 * How much of the scenery at View (view space) the hole takes away: 0 none, 1 all. Up is the world's up in view space
 	 * (unit length); without one (zero), what lies below the sprite's feet on the screen is kept instead. FieldScene.usf's

@@ -135,13 +135,26 @@ namespace
 			Frame.Order.push_back({static_cast<uint32>(Frame.Quads.size() - 1), Weltall::EFieldDrawKind::Character});
 		}
 
-		/** Evaluates the scenery and puts its polygons into the order, after the particles already there. */
-		void Evaluate()
+		/**
+		 * Evaluates the scenery and puts its polygons into the order, after the particles already there: one placed model
+		 * of them all, or one for each count of them in turn.
+		 */
+		void Evaluate(std::initializer_list<uint32> Counts = {})
 		{
-			Weltall::FFieldSceneObject& Object = Scene.Objects.emplace_back();
-			Object.Placement = Weltall::FGteMatrix::Identity();
-			Object.Bounds = {{0, 0, 0}, 5000};
-			Object.PolygonCount = static_cast<uint32>(Scene.Polygons.size());
+			uint32 First = 0;
+			for (const uint32 Count : Counts.size() != 0 ? Counts : std::initializer_list<uint32>{static_cast<uint32>(Scene.Polygons.size())})
+			{
+				Weltall::FFieldSceneObject& Object = Scene.Objects.emplace_back();
+				Object.Placement = Weltall::FGteMatrix::Identity();
+				Object.Bounds = {{0, 0, 0}, 5000};
+				Object.FirstPolygon = First;
+				Object.PolygonCount = Count;
+				for (uint32 Polygon = First; Polygon < First + Count; ++Polygon)
+				{
+					Scene.Polygons[Polygon].Object = static_cast<uint16>(Scene.Objects.size() - 1);
+				}
+				First += Count;
+			}
 			Weltall::EvaluateFieldScene(Scene, View, Weltall::EFieldCulling::InRange, Frame.Scenery);
 			Frame.SceneryWorld.assign(Scene.Objects.size(), {});
 			for (const uint32 Polygon : Frame.Scenery.DrawOrder)
@@ -585,6 +598,39 @@ bool FFieldShadowRenderingTest::RunTest(const FString&)
 	Near(Buffered, TEXT("depth buffer: the wall standing above the shadow's floor hides it"), 105, 195, 0, 0, 255);
 	Near(Painted, TEXT("painter's order: the shadow over the bump drawn before it"), 113, 195, 255, 255, 255);
 	Near(Buffered, TEXT("depth buffer: the shadow still over the bump close above its floor"), 113, 195, 255, 255, 255);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFieldSeeThroughModelsRenderingTest, "Weltall.Rendering.FieldSeeThroughOnlyWhatHidesTheParty",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FFieldSeeThroughModelsRenderingTest::RunTest(const FString&)
+{
+	const Weltall::FVram Vram = MakeVram();
+	FVramTexture Units;
+	BeginInitResource(&Units);
+	Units.Follow(Vram);
+
+	// A party member's sprite 2000 units away over the screen's (152, 96)-(168, 128), and two placed models 1000 units
+	// away: a blue platform beside it, within its bubble but hiding none of it, and a green wall over it.
+	const auto Render = [&Units](Weltall::EFieldSeeThrough SeeThrough)
+	{
+		FTestFrame Test;
+		Test.Sprite(152, 96, 2000);
+		Test.Frame.Characters.back().bSeenThrough = true;
+		Test.Quad(110, 80, 150, 150, FlatQuad, {0, 0, 200});
+		Test.Quad(154, 100, 166, 124, FlatQuad, {0, 200, 0});
+		Test.Evaluate({1, 1});
+		return Test.Render(Units, nullptr, 1.0f, EFieldSorting::DepthBufferWithScenery, SeeThrough);
+	};
+	const auto At = [](const TArray<FColor>& Pixels, int32 X, int32 Y) { return Pixels[Y * ScreenWidth + X]; };
+	const TArray<FColor> Hidden = Render(Weltall::EFieldSeeThrough::Off);
+	const TArray<FColor> Seen = Render(Weltall::EFieldSeeThrough::On);
+	TestFalse(TEXT("off: the wall hides the sprite"), IsNear(At(Hidden, 157, 112), 255, 0, 0));
+	TestTrue(TEXT("on: the sprite shows through the wall that hides it"), IsNear(At(Seen, 157, 112), 255, 0, 0));
+	TestEqual(TEXT("on: the platform beside it, hiding none of it, is kept"), At(Seen, 140, 112), At(Hidden, 140, 112));
+	BeginReleaseResource(&Units);
+	FlushRenderingCommands();
 	return true;
 }
 

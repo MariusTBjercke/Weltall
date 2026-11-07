@@ -206,8 +206,8 @@ void AddFieldCharacterQuads(const Weltall::FFieldFrame& Latest, const Weltall::F
 	}
 }
 
-void AddFieldSeeThroughHoles(const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha, const FFieldSceneMesh& Mesh,
-	const FFieldRenderOptions& Options, FFieldSceneDraw& Draw)
+void AddFieldSeeThroughHoles(const Weltall::FFieldScene& Scene, const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha,
+	const FFieldSceneMesh& Mesh, const FFieldRenderOptions& Options, FFieldSceneDraw& Draw)
 {
 	Draw.SeeThroughHoles.Reset();
 	// The identity follows the scenery's models; the gears' rows follow it.
@@ -279,6 +279,86 @@ void AddFieldSeeThroughHoles(const Weltall::FFieldFrame& Latest, const Weltall::
 		if (!Corners.IsEmpty())
 		{
 			Draw.SeeThroughHoles.Add(Weltall::SeeThroughHoleOf(std::span<const std::array<float, 3>>(Corners.GetData(), static_cast<std::size_t>(Corners.Num()))));
+		}
+	}
+	MarkFieldSeeThroughModels(Scene, Latest, Mesh, Draw);
+}
+
+void MarkFieldSeeThroughModels(const Weltall::FFieldScene& Scene, const Weltall::FFieldFrame& Latest, const FFieldSceneMesh& Mesh, FFieldSceneDraw& Draw)
+{
+	if (Draw.SeeThroughHoles.IsEmpty())
+	{
+		return;
+	}
+	// The points of the party the eye looks for.
+	TArray<std::array<float, 3>, TInlineAllocator<Weltall::FieldSeeThroughHoles * Weltall::FieldSeeThroughSamples>> Samples;
+	for (const Weltall::FFieldSeeThroughHole& Hole : Draw.SeeThroughHoles)
+	{
+		for (const std::array<float, 3>& Sample : Weltall::SeeThroughSamples(Hole))
+		{
+			Samples.Add(Sample);
+		}
+	}
+	const TConstArrayView<FFieldSceneCorner> MeshCorners = Mesh.CornerList();
+	const auto ViewOf = [&Draw](const FFieldSceneCorner& Corner)
+	{
+		const int32 Row = static_cast<int32>(Corner.Object) * 3;
+		if (!Draw.Objects.IsValidIndex(Row + 2))
+		{
+			return std::array<float, 3>{0.0f, 0.0f, 0.0f};
+		}
+		const auto Dot = [&Corner](const FVector4f& Rows) { return Rows.X * Corner.Position.X + Rows.Y * Corner.Position.Y + Rows.Z * Corner.Position.Z + Rows.W; };
+		return std::array<float, 3>{Dot(Draw.Objects[Row]), Dot(Draw.Objects[Row + 1]), Dot(Draw.Objects[Row + 2])};
+	};
+	// A placed model one of whose drawn triangles stands between the eye and the party: all of it may be seen through.
+	TBitArray<> Hiding(false, static_cast<int32>(Scene.Objects.size()));
+	const uint32 SceneryPolygons = FMath::Min<uint32>(static_cast<uint32>(Scene.Polygons.size()), Mesh.FirstGearPolygon());
+	for (uint32 Polygon = 0; Polygon < SceneryPolygons && Polygon < Latest.Scenery.Polygons.size(); ++Polygon)
+	{
+		const int32 Object = static_cast<int32>(Scene.Polygons[Polygon].Object);
+		if (!Hiding.IsValidIndex(Object) || Hiding[Object] || !Latest.Scenery.Polygons[Polygon].bDrawn
+			|| (Mesh.States()[static_cast<int32>(Polygon)].Flags & FieldPolygonFlags::SeeThrough) == 0)
+		{
+			continue;
+		}
+		const bool bRedirected = Draw.Redirects.IsValidIndex(static_cast<int32>(Polygon)) && Draw.Redirects[Polygon] != FFieldSceneDraw::NoRedirect;
+		const uint32 First = bRedirected ? Draw.Redirects[Polygon] : Mesh.FirstCorner(Polygon);
+		const uint32 Count = Mesh.CornerCount(Polygon);
+		const auto CornerAt = [&](uint32 Number) -> const FFieldSceneCorner&
+		{
+			return bRedirected ? Draw.DynamicCorners[static_cast<int32>(First + Number)] : MeshCorners[static_cast<int32>(First + Number)];
+		};
+		for (uint32 Triangle = 0; Triangle + 2 < Count && !Hiding[Object]; Triangle += 3)
+		{
+			const std::array<float, 3> A = ViewOf(CornerAt(Triangle));
+			const std::array<float, 3> B = ViewOf(CornerAt(Triangle + 1));
+			const std::array<float, 3> C = ViewOf(CornerAt(Triangle + 2));
+			for (const std::array<float, 3>& Sample : Samples)
+			{
+				if (Weltall::HidesFromEye(Sample, A, B, C))
+				{
+					Hiding[Object] = true;
+					break;
+				}
+			}
+		}
+	}
+	for (uint32 Polygon = 0; Polygon < SceneryPolygons; ++Polygon)
+	{
+		const int32 Object = static_cast<int32>(Scene.Polygons[Polygon].Object);
+		if (!Hiding.IsValidIndex(Object) || !Hiding[Object] || !Draw.Colors.IsValidIndex(static_cast<int32>(Polygon)))
+		{
+			continue;
+		}
+		Draw.Colors[static_cast<int32>(Polygon)].X |= FieldColorFlags::SeeThrough;
+		// A changed copy of it is drawn by colours of its own.
+		if (Draw.Redirects.IsValidIndex(static_cast<int32>(Polygon)) && Draw.Redirects[Polygon] != FFieldSceneDraw::NoRedirect)
+		{
+			const uint32 Copy = Draw.DynamicCorners[static_cast<int32>(Draw.Redirects[Polygon])].Polygon;
+			if (Draw.Colors.IsValidIndex(static_cast<int32>(Copy)))
+			{
+				Draw.Colors[static_cast<int32>(Copy)].X |= FieldColorFlags::SeeThrough;
+			}
 		}
 	}
 }

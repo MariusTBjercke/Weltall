@@ -53,6 +53,8 @@ namespace FieldColorFlags
 {
 	/** Its texels are modulated by its colour even when its packet draws them raw (depth-cued in fog). */
 	constexpr uint32 Modulated = 1u << 24;
+	/** Its placed model stands between the eye and one of the party (FieldPolygonFlags::SeeThrough): it is seen through about them. */
+	constexpr uint32 SeeThrough = 1u << 25;
 }
 
 /** The corners a quad is drawn with in the dynamic corners: two triangles, 0-1-2 and 1-3-2. */
@@ -179,8 +181,14 @@ void AddFieldCharacterQuads(const Weltall::FFieldFrame& Latest, const Weltall::F
  * parts' rows draw them; in the space of the identity's rows the quads are drawn by. None while the options' SeeThrough
  * is off. After the gears' objects' rows are added.
  */
-void AddFieldSeeThroughHoles(const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha, const FFieldSceneMesh& Mesh,
-	const FFieldRenderOptions& Options, FFieldSceneDraw& Draw);
+void AddFieldSeeThroughHoles(const Weltall::FFieldScene& Scene, const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha,
+	const FFieldSceneMesh& Mesh, const FFieldRenderOptions& Options, FFieldSceneDraw& Draw);
+
+/**
+ * Marks the scenery's placed models that stand between the eye and one of the holes' sprites (FieldColorFlags::SeeThrough):
+ * only those are seen through, the rest of the scenery about the party drawn as it is.
+ */
+void MarkFieldSeeThroughModels(const Weltall::FFieldScene& Scene, const Weltall::FFieldFrame& Latest, const FFieldSceneMesh& Mesh, FFieldSceneDraw& Draw);
 
 /** The particles' quads as dynamic corners, their states and colours, each drawn between its two ticks' corners and colours. */
 void AddFieldParticleQuads(const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha, const FFieldSceneMesh& Mesh,

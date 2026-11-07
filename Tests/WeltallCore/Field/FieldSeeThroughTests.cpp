@@ -69,3 +69,27 @@ TEST_CASE("The scenery is seen through in a round bubble about the sprite, in fr
 	CHECK(SeeThroughShare(Hole, {0.0f, -8.0f, 500.0f}, {}) == Catch::Approx(1.0f));
 	CHECK(SeeThroughShare(Hole, {0.0f, 4.0f, 500.0f}, {}) == 0.0f);
 }
+
+TEST_CASE("The eye looks for a sprite up its middle and to its sides", "[Field]")
+{
+	const auto Samples = SeeThroughSamples(StandingSprite());
+	CHECK(Samples[0] == std::array<float, 3>{0.0f, -8.0f, 1000.0f});
+	CHECK(Samples[1][1] == Catch::Approx(-17.6f));
+	CHECK(Samples[2][1] == Catch::Approx(-27.2f));
+	CHECK(Samples[3][0] == Catch::Approx(-4.8f));
+	CHECK(Samples[4][0] == Catch::Approx(4.8f));
+}
+
+TEST_CASE("Only what stands between the eye and a point hides it", "[Field]")
+{
+	const std::array<float, 3> To{0.0f, 0.0f, 1000.0f};
+	// A wall across the ray, half way: it hides the point, whichever way it faces.
+	CHECK(HidesFromEye(To, {-100.0f, -100.0f, 500.0f}, {100.0f, -100.0f, 500.0f}, {0.0f, 100.0f, 500.0f}));
+	CHECK(HidesFromEye(To, {-100.0f, -100.0f, 500.0f}, {0.0f, 100.0f, 500.0f}, {100.0f, -100.0f, 500.0f}));
+	// Beside the ray, behind the point, or in front of it by less than the margin (what it stands against): it does not.
+	CHECK_FALSE(HidesFromEye(To, {200.0f, -100.0f, 500.0f}, {400.0f, -100.0f, 500.0f}, {300.0f, 100.0f, 500.0f}));
+	CHECK_FALSE(HidesFromEye(To, {-100.0f, -100.0f, 1500.0f}, {100.0f, -100.0f, 1500.0f}, {0.0f, 100.0f, 1500.0f}));
+	CHECK_FALSE(HidesFromEye(To, {-100.0f, -100.0f, 990.0f}, {100.0f, -100.0f, 990.0f}, {0.0f, 100.0f, 990.0f}));
+	// Along the ray, edge on: it does not.
+	CHECK_FALSE(HidesFromEye(To, {0.0f, -100.0f, 400.0f}, {0.0f, 100.0f, 400.0f}, {0.0f, 0.0f, 600.0f}));
+}
