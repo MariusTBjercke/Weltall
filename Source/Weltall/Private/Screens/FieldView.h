@@ -107,6 +107,8 @@ private:
 	mutable TArray<TSharedRef<FFieldScreenFrame>> DisplayFrames;
 	/** The latest picture standing still, and what it shows: the map's load, its tick, the options and the mesh it was drawn with. */
 	mutable TSharedPtr<FFieldStillFrame> Still;
+	/** How far each placed model is seen through about the party, from frame to frame. */
+	mutable Weltall::FFieldSeeThroughFade SeeThroughFade;
 	mutable int32 StillMapLoads = 0;
 	mutable uint32 StillTick = 0;
 	mutable FFieldRenderOptions StillOptions;

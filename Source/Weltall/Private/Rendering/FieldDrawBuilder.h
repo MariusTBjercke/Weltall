@@ -53,8 +53,12 @@ namespace FieldColorFlags
 {
 	/** Its texels are modulated by its colour even when its packet draws them raw (depth-cued in fog). */
 	constexpr uint32 Modulated = 1u << 24;
-	/** Its placed model stands between the eye and one of the party (FieldPolygonFlags::SeeThrough): it is seen through about them. */
-	constexpr uint32 SeeThrough = 1u << 25;
+	/**
+	 * From this bit, how far its placed model is seen through about the party (FieldPolygonFlags::SeeThrough), of
+	 * SeeThroughLevels: none but where it stands between the eye and one of them (FFieldSeeThroughFade).
+	 */
+	constexpr uint32 SeeThroughShift = 25;
+	constexpr uint32 SeeThroughLevels = 127;
 }
 
 /** The corners a quad is drawn with in the dynamic corners: two triangles, 0-1-2 and 1-3-2. */
@@ -182,14 +186,15 @@ void AddFieldCharacterQuads(const Weltall::FFieldFrame& Latest, const Weltall::F
  * is off. After the gears' objects' rows are added.
  */
 void AddFieldSeeThroughHoles(const Weltall::FFieldScene& Scene, const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha,
-	const FFieldSceneMesh& Mesh, const FFieldRenderOptions& Options, FFieldSceneDraw& Draw);
+	const FFieldSceneMesh& Mesh, const FFieldRenderOptions& Options, FFieldSceneDraw& Draw, Weltall::FFieldSeeThroughFade* Fade = nullptr);
 
 /**
  * Marks the scenery's placed models that stand between the eye and one of the holes' sprites (FieldColorFlags::SeeThrough),
  * and those touching them that stand above that sprite's feet and in front of it; never one a sprite stands on. Only
  * those are seen through, the rest of the scenery about the party drawn as it is.
  */
-void MarkFieldSeeThroughModels(const Weltall::FFieldScene& Scene, const Weltall::FFieldFrame& Latest, const FFieldSceneMesh& Mesh, FFieldSceneDraw& Draw);
+void MarkFieldSeeThroughModels(const Weltall::FFieldScene& Scene, const Weltall::FFieldFrame& Latest, const FFieldSceneMesh& Mesh, FFieldSceneDraw& Draw,
+	Weltall::FFieldSeeThroughFade* Fade = nullptr);
 
 /** The particles' quads as dynamic corners, their states and colours, each drawn between its two ticks' corners and colours. */
 void AddFieldParticleQuads(const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha, const FFieldSceneMesh& Mesh,

@@ -5,6 +5,7 @@
 #include <array>
 #include <cstddef>
 #include <span>
+#include <vector>
 
 namespace Weltall
 {
@@ -40,7 +41,34 @@ namespace Weltall
 		/** How far above the sprite's floor, as shares of its height, the scenery starts to be taken away, and over how much more it fades in. */
 		inline constexpr float FloorMargin = 0.05f;
 		inline constexpr float FloorFade = 0.15f;
+		/** How long (seconds) a model must hide the party before it starts to be seen through: a jump past a ledge never does. */
+		inline constexpr float Delay = 0.2f;
+		/** How long it takes to be seen through all the way, and to come back. */
+		inline constexpr float FadeIn = 0.25f;
+		inline constexpr float FadeOut = 0.35f;
 	}
+
+	/**
+	 * How far each placed model of a map is seen through, from frame to frame: it starts once the model has hidden the
+	 * party for FieldSeeThrough::Delay, and comes in and goes out over FadeIn and FadeOut, rather than at once.
+	 */
+	class FFieldSeeThroughFade
+	{
+	public:
+		/**
+		 * The shares (0 to 1) after a frame shown at Now (seconds) in which Hiding tells which models hide the party, of
+		 * the field's tick Tick. Another count of models, or a tick before the last (another map), starts again from none.
+		 */
+		WELTALLCORE_API std::span<const float> Step(std::span<const bool> Hiding, double Now, uint32 Tick);
+
+	private:
+		std::vector<float> Shares;
+		/** How long each has hidden the party without a break. */
+		std::vector<float> Held;
+		double Last = 0.0;
+		uint32 LastTick = 0;
+		bool bStarted = false;
+	};
 
 	/** Whether the actor stands for one of the party's filled slots. */
 	WELTALLCORE_API bool IsPartyActor(const FEventContext& Context, int32 Actor);

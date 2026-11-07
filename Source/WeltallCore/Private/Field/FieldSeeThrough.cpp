@@ -170,4 +170,27 @@ namespace Weltall
 		const float Inside = Saturate((1.0f - Across) / Edge);
 		return InFront * AboveFloor * Inside;
 	}
+
+	std::span<const float> FFieldSeeThroughFade::Step(std::span<const bool> Hiding, double Now, uint32 Tick)
+	{
+		using namespace FieldSeeThrough;
+		if (!bStarted || Hiding.size() != Shares.size() || Tick < LastTick)
+		{
+			Shares.assign(Hiding.size(), 0.0f);
+			Held.assign(Hiding.size(), 0.0f);
+			Last = Now;
+			bStarted = true;
+		}
+		// A long stall (a load, the window in the background) is not a fade's worth of time.
+		const float Seconds = static_cast<float>(std::clamp(Now - Last, 0.0, 0.1));
+		Last = Now;
+		LastTick = Tick;
+		for (std::size_t Model = 0; Model < Hiding.size(); ++Model)
+		{
+			Held[Model] = Hiding[Model] ? Held[Model] + Seconds : 0.0f;
+			const bool bShown = Hiding[Model] && Held[Model] >= Delay;
+			Shares[Model] = bShown ? std::min(1.0f, Shares[Model] + Seconds / FadeIn) : std::max(0.0f, Shares[Model] - Seconds / FadeOut);
+		}
+		return Shares;
+	}
 }

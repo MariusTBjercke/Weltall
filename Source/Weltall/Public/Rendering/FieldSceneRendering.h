@@ -304,10 +304,13 @@ WELTALL_API void BuildFieldSceneDraw(const Weltall::FFieldScene& Scene, const We
  * ticks (the models, the characters, the projection) drawn Alpha of the way from the tick before's
  * Previous, unless the view cut or the thing jumped; cels and colours the latest tick's. Reuses Draw's memory.
  * TexelKinds, following the VRAM the frame is drawn from exactly as the GPU will have it, lets a semi-transparent
- * polygon's pass with no texels to draw be left out. Returns whether it drew between the two (no cut).
+ * polygon's pass with no texels to draw be left out. SeeThroughFade, kept from frame to frame, has the scenery that hides
+ * the party seen through after a moment and in and out over a while (FFieldSeeThroughFade); without it, at once. Returns
+ * whether it drew between the two (no cut).
  */
 WELTALL_API bool BuildFieldFrameDraw(const Weltall::FFieldScene& Scene, const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha,
-	const FFieldSceneMesh& Mesh, const FFieldRenderOptions& Options, FFieldSceneDraw& Draw, Weltall::FTexelKindCache* TexelKinds = nullptr);
+	const FFieldSceneMesh& Mesh, const FFieldRenderOptions& Options, FFieldSceneDraw& Draw, Weltall::FTexelKindCache* TexelKinds = nullptr,
+	Weltall::FFieldSeeThroughFade* SeeThroughFade = nullptr);
 
 /**
  * Moves a frame's drawing from the view it was made under (From, world to view) to another (To): every object's

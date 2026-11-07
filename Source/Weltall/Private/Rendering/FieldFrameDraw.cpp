@@ -234,7 +234,7 @@ namespace
 }
 
 bool BuildFieldFrameDraw(const Weltall::FFieldScene& Scene, const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha,
-	const FFieldSceneMesh& Mesh, const FFieldRenderOptions& Options, FFieldSceneDraw& Draw, Weltall::FTexelKindCache* TexelKinds)
+	const FFieldSceneMesh& Mesh, const FFieldRenderOptions& Options, FFieldSceneDraw& Draw, Weltall::FTexelKindCache* TexelKinds, Weltall::FFieldSeeThroughFade* SeeThroughFade)
 {
 	Draw.Objects.Reset();
 	Draw.Colors.Reset();
@@ -309,7 +309,7 @@ bool BuildFieldFrameDraw(const Weltall::FFieldScene& Scene, const Weltall::FFiel
 	AddFieldBackdrop(Latest, Before, Alpha, Mesh, Draw);
 	// The gears' rows after the identity the quads above are drawn by, then their cloths.
 	AddGearObjects(Latest, Before, Alpha, Draw);
-	AddFieldSeeThroughHoles(Scene, Latest, Before, Alpha, Mesh, Options, Draw);
+	AddFieldSeeThroughHoles(Scene, Latest, Before, Alpha, Mesh, Options, Draw, SeeThroughFade);
 	AddGearCloths(Latest, Before, Alpha, Mesh, Draw);
 	AddFieldPictureStretch(Scene, Latest, Before, Alpha, Mesh, Draw);
 	FFieldDrawBuilder Builder(Scene, Latest.Scenery, Latest.Characters, Latest.Quads, Latest.Particles, Mesh, Draw, &Latest.Gears, &Latest.SpriteModels, TexelKinds);

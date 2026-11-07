@@ -214,7 +214,7 @@ bool FFieldView::Fill(FFieldScreenFrame& Display, const Weltall::FFieldScene& Sc
 		Display.Alpha = 1.0f;
 		return false;
 	}
-	const bool bBlended = BuildFieldFrameDraw(Scene, Now, Before, Alpha, *Display.GetMesh(), Options, Display.Draw, TexelKindsOf(SceneVram, Now));
+	const bool bBlended = BuildFieldFrameDraw(Scene, Now, Before, Alpha, *Display.GetMesh(), Options, Display.Draw, TexelKindsOf(SceneVram, Now), &SeeThroughFade);
 	Display.Layer.Primitives.assign(Now.Screen.Primitives.begin(), Now.Screen.Primitives.end());
 	Display.bPreviousLayer = Before != nullptr && LayerMatches != nullptr;
 	if (Display.bPreviousLayer)
@@ -295,7 +295,7 @@ TSharedPtr<const IScreenFrame> FFieldView::CaptureStill(const Weltall::FFieldPro
 		return Still;
 	}
 	const TSharedRef<FFieldScreenFrame> Next = MakeShared<FFieldScreenFrame>(Mesh.ToSharedRef(), Vram);
-	BuildFieldFrameDraw(Program.Drawing().Scene(), *Latest, nullptr, 1.0f, *Mesh, Options, Next->Draw, TexelKindsOf(Program.Drawing().Vram(), *Latest));
+	BuildFieldFrameDraw(Program.Drawing().Scene(), *Latest, nullptr, 1.0f, *Mesh, Options, Next->Draw, TexelKindsOf(Program.Drawing().Vram(), *Latest), &SeeThroughFade);
 	// The picture of the screen keeps its place among the layer's primitives that remain.
 	Next->Cover = Latest->Cover;
 	Next->Cover.LayerIndex = 0;

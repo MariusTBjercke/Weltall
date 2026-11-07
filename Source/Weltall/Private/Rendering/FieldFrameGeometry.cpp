@@ -207,7 +207,7 @@ void AddFieldCharacterQuads(const Weltall::FFieldFrame& Latest, const Weltall::F
 }
 
 void AddFieldSeeThroughHoles(const Weltall::FFieldScene& Scene, const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha,
-	const FFieldSceneMesh& Mesh, const FFieldRenderOptions& Options, FFieldSceneDraw& Draw)
+	const FFieldSceneMesh& Mesh, const FFieldRenderOptions& Options, FFieldSceneDraw& Draw, Weltall::FFieldSeeThroughFade* Fade)
 {
 	Draw.SeeThroughHoles.Reset();
 	// The identity follows the scenery's models; the gears' rows follow it.
@@ -281,13 +281,22 @@ void AddFieldSeeThroughHoles(const Weltall::FFieldScene& Scene, const Weltall::F
 			Draw.SeeThroughHoles.Add(Weltall::SeeThroughHoleOf(std::span<const std::array<float, 3>>(Corners.GetData(), static_cast<std::size_t>(Corners.Num()))));
 		}
 	}
-	MarkFieldSeeThroughModels(Scene, Latest, Mesh, Draw);
+	MarkFieldSeeThroughModels(Scene, Latest, Mesh, Draw, Fade);
 }
 
-void MarkFieldSeeThroughModels(const Weltall::FFieldScene& Scene, const Weltall::FFieldFrame& Latest, const FFieldSceneMesh& Mesh, FFieldSceneDraw& Draw)
+void MarkFieldSeeThroughModels(const Weltall::FFieldScene& Scene, const Weltall::FFieldFrame& Latest, const FFieldSceneMesh& Mesh, FFieldSceneDraw& Draw,
+	Weltall::FFieldSeeThroughFade* Fade)
 {
+	const int32 Objects = static_cast<int32>(Scene.Objects.size());
 	if (Draw.SeeThroughHoles.IsEmpty())
 	{
+		// Nothing hides a party that is not there: what was seen through comes back.
+		if (Fade != nullptr)
+		{
+			TArray<bool> None;
+			None.SetNumZeroed(Objects);
+			Fade->Step(std::span<const bool>(None.GetData(), static_cast<std::size_t>(None.Num())), FPlatformTime::Seconds(), Latest.Tick);
+		}
 		return;
 	}
 	// The points of the party the eye looks for.
@@ -313,7 +322,6 @@ void MarkFieldSeeThroughModels(const Weltall::FFieldScene& Scene, const Weltall:
 		return std::array<float, 3>{Dot(Draw.Objects[Row]), Dot(Draw.Objects[Row + 1]), Dot(Draw.Objects[Row + 2])};
 	};
 	// Per placed model: drawn with polygons that may be seen through, standing between the eye and the party, bearing one of them.
-	const int32 Objects = static_cast<int32>(Scene.Objects.size());
 	TBitArray<> Seeable(false, Objects);
 	TBitArray<> Hit(false, Objects);
 	TBitArray<> Bearing(false, Objects);
@@ -395,21 +403,47 @@ void MarkFieldSeeThroughModels(const Weltall::FFieldScene& Scene, const Weltall:
 			}
 		}
 	}
+	// How far each is seen through: after a moment and over a while where the drawing keeps a fade, at once where not.
+	TArray<bool> Hides;
+	Hides.SetNumUninitialized(Objects);
+	for (int32 Object = 0; Object < Objects; ++Object)
+	{
+		Hides[Object] = Hiding[Object];
+	}
+	TArray<float> Immediate;
+	std::span<const float> Shares;
+	if (Fade != nullptr)
+	{
+		Shares = Fade->Step(std::span<const bool>(Hides.GetData(), static_cast<std::size_t>(Hides.Num())), FPlatformTime::Seconds(), Latest.Tick);
+	}
+	else
+	{
+		for (const bool bHides : Hides)
+		{
+			Immediate.Add(bHides ? 1.0f : 0.0f);
+		}
+		Shares = std::span<const float>(Immediate.GetData(), static_cast<std::size_t>(Immediate.Num()));
+	}
 	for (uint32 Polygon = 0; Polygon < SceneryPolygons; ++Polygon)
 	{
 		const int32 Object = static_cast<int32>(Scene.Polygons[Polygon].Object);
-		if (Object >= Objects || !Hiding[Object] || !Draw.Colors.IsValidIndex(static_cast<int32>(Polygon)))
+		if (Object >= Objects || static_cast<std::size_t>(Object) >= Shares.size() || !Draw.Colors.IsValidIndex(static_cast<int32>(Polygon)))
 		{
 			continue;
 		}
-		Draw.Colors[static_cast<int32>(Polygon)].X |= FieldColorFlags::SeeThrough;
+		const uint32 Level = static_cast<uint32>(FMath::RoundToInt(FMath::Clamp(Shares[static_cast<std::size_t>(Object)], 0.0f, 1.0f) * FieldColorFlags::SeeThroughLevels));
+		if (Level == 0)
+		{
+			continue;
+		}
+		Draw.Colors[static_cast<int32>(Polygon)].X |= Level << FieldColorFlags::SeeThroughShift;
 		// A changed copy of it is drawn by colours of its own.
 		if (Draw.Redirects.IsValidIndex(static_cast<int32>(Polygon)) && Draw.Redirects[Polygon] != FFieldSceneDraw::NoRedirect)
 		{
 			const uint32 Copy = Draw.DynamicCorners[static_cast<int32>(Draw.Redirects[Polygon])].Polygon;
 			if (Draw.Colors.IsValidIndex(static_cast<int32>(Copy)))
 			{
-				Draw.Colors[static_cast<int32>(Copy)].X |= FieldColorFlags::SeeThrough;
+				Draw.Colors[static_cast<int32>(Copy)].X |= Level << FieldColorFlags::SeeThroughShift;
 			}
 		}
 	}

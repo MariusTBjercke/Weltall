@@ -106,3 +106,37 @@ TEST_CASE("The ground under a sprite's feet bears it, and nothing else does", "[
 	CHECK_FALSE(BearsSprite(Hole, Up, {-50.0f, -40.0f, 950.0f}, {50.0f, -40.0f, 950.0f}, {0.0f, -40.0f, 1100.0f}));
 	CHECK_FALSE(BearsSprite(Hole, Up, {-100.0f, -100.0f, 500.0f}, {100.0f, -100.0f, 500.0f}, {0.0f, 100.0f, 500.0f}));
 }
+
+TEST_CASE("A model is seen through only once it has hidden the party a while, and fades in and out", "[Field]")
+{
+	FFieldSeeThroughFade Fade;
+	const std::array<bool, 2> Hides{true, false};
+	const std::array<bool, 2> None{false, false};
+	double Now = 0.0;
+	const auto Run = [&](std::span<const bool> Hiding, double Seconds)
+	{
+		std::span<const float> Shares;
+		for (double Until = Now + Seconds; Now < Until - 1e-9;)
+		{
+			Now += 1.0 / 60.0;
+			Shares = Fade.Step(Hiding, Now, 1);
+		}
+		return std::vector<float>(Shares.begin(), Shares.end());
+	};
+	Fade.Step(None, Now, 1);
+	// A jump past a ledge: hidden for less than the delay, never seen through.
+	CHECK(Run(Hides, 0.15)[0] == 0.0f);
+	CHECK(Run(None, 0.1)[0] == 0.0f);
+	// Hidden for good: nothing until the delay, then in over FadeIn.
+	CHECK(Run(Hides, 0.15)[0] == 0.0f);
+	// Whole frames of 1/60 s: half way, give or take two of them.
+	CHECK(Run(Hides, 0.05 + FieldSeeThrough::FadeIn / 2.0)[0] == Catch::Approx(0.5f).margin(2.0 / 60.0 / FieldSeeThrough::FadeIn));
+	CHECK(Run(Hides, FieldSeeThrough::FadeIn)[0] == 1.0f);
+	CHECK(Run(Hides, 0.1)[1] == 0.0f);
+	// No longer hiding: out over FadeOut, at once.
+	CHECK(Run(None, FieldSeeThrough::FadeOut / 2.0)[0] == Catch::Approx(0.5f).margin(2.0 / 60.0 / FieldSeeThrough::FadeOut));
+	CHECK(Run(None, FieldSeeThrough::FadeOut)[0] == 0.0f);
+	// Another map (a tick before the last) starts from none.
+	Run(Hides, 1.0);
+	CHECK(Fade.Step(Hides, Now + 0.01, 0)[0] == 0.0f);
+}
