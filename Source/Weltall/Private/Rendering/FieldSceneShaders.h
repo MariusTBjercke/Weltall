@@ -56,6 +56,7 @@ public:
 		SHADER_PARAMETER_ARRAY(FVector4f, SeeThroughHead, [6])
 		SHADER_PARAMETER(uint32, SeeThroughCount)
 		SHADER_PARAMETER(FVector3f, SeeThroughUp)
+		SHADER_PARAMETER(float, SeeThroughWiden)
 	END_SHADER_PARAMETER_STRUCT()
 };
 static_assert(Weltall::FieldSeeThroughHoles == 6, "FieldScene.usf and FFieldScenePS hold six see-through holes");

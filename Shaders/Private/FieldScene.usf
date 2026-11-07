@@ -38,7 +38,6 @@
 #define SEE_THROUGH_HOLES 6
 #define SEE_THROUGH_DEPTH_MARGIN 32.0
 #define SEE_THROUGH_DEPTH_FADE 64.0
-#define SEE_THROUGH_WIDEN 3.0
 #define SEE_THROUGH_EDGE 0.35
 #define SEE_THROUGH_FLOOR_MARGIN 0.05
 #define SEE_THROUGH_FLOOR_FADE 0.15
@@ -133,6 +132,8 @@ float4 SeeThroughHead[SEE_THROUGH_HOLES];
 uint SeeThroughCount;
 // The world's up in the view the holes are placed in (zero: unknown, and what lies below a sprite's feet is kept).
 float3 SeeThroughUp;
+// The bubble's radius over a sprite's half height, as the player chose its size.
+float SeeThroughWiden;
 
 // Multisampling's four samples at their standard places, in sixteenths of a pixel from its centre (Direct3D's, which
 // Vulkan's standard places are).
@@ -372,7 +373,7 @@ float SeeThroughShare(float4 Feet, float4 Head, float3 View)
 	const float2 AtFeet = Feet.xy / Feet.z;
 	const float2 AtHead = Head.xy / Head.z;
 	const float2 Middle = (AtFeet + AtHead) * 0.5;
-	const float Radius = max(length(AtHead - AtFeet) * 0.5, Feet.w / Feet.z) * SEE_THROUGH_WIDEN;
+	const float Radius = max(length(AtHead - AtFeet) * 0.5, Feet.w / Feet.z) * SeeThroughWiden;
 	const float Inside = saturate((1.0 - length(Point - Middle) / max(Radius, 1e-8)) / SEE_THROUGH_EDGE);
 	return InFront * AboveFloor * Inside;
 }

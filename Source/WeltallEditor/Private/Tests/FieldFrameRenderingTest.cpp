@@ -630,7 +630,7 @@ bool FFieldSeeThroughModelsRenderingTest::RunTest(const FString&)
 	};
 	const auto At = [](const TArray<FColor>& Pixels, int32 X, int32 Y) { return Pixels[Y * ScreenWidth + X]; };
 	const TArray<FColor> Hidden = Render(Weltall::EFieldSeeThrough::Off);
-	const TArray<FColor> Seen = Render(Weltall::EFieldSeeThrough::On);
+	const TArray<FColor> Seen = Render(Weltall::EFieldSeeThrough::Normal);
 	TestFalse(TEXT("off: the wall hides the sprite"), IsNear(At(Hidden, 157, 112), 255, 0, 0));
 	TestTrue(TEXT("on: the sprite shows through the wall that hides it"), IsNear(At(Seen, 157, 112), 255, 0, 0));
 	TestEqual(TEXT("on: the platform apart from it, hiding none of it, is kept"), At(Seen, 115, 112), At(Hidden, 115, 112));
@@ -799,8 +799,8 @@ bool FFieldSeeThroughRenderingTest::RunTest(const FString&)
 	for (const EFieldSorting Sorting : {EFieldSorting::PaintersOrder, EFieldSorting::DepthBufferWithScenery})
 	{
 		const TArray<FColor> Hidden = Render(true, Weltall::EFieldSeeThrough::Off, Sorting);
-		const TArray<FColor> Seen = Render(true, Weltall::EFieldSeeThrough::On, Sorting);
-		const TArray<FColor> Stranger = Render(false, Weltall::EFieldSeeThrough::On, Sorting);
+		const TArray<FColor> Seen = Render(true, Weltall::EFieldSeeThrough::Normal, Sorting);
+		const TArray<FColor> Stranger = Render(false, Weltall::EFieldSeeThrough::Normal, Sorting);
 		// Off, the wall hides the sprite; on, the sprite's middle shows through it; someone not of the party stays hidden.
 		TestFalse(TEXT("The wall hides the sprite when see-through is off"), IsNear(At(Hidden, 157, 112), 255, 0, 0));
 		TestTrue(TEXT("The sprite shows through the wall"), IsNear(At(Seen, 157, 112), 255, 0, 0));

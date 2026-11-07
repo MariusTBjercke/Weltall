@@ -338,6 +338,7 @@ namespace
 		FVector4f Head[Weltall::FieldSeeThroughHoles];
 		/** The world's up as the rows turn it. */
 		FVector3f Up = FVector3f::ZeroVector;
+		float Widen = 0.0f;
 		uint32 Count = 0;
 	};
 
@@ -357,6 +358,7 @@ namespace
 		};
 		// The world's up, turned with the view as the rows are (MoveFieldSceneView).
 		Shapes.Up = Draw.FloorUp;
+		Shapes.Widen = Draw.SeeThroughWiden;
 		for (const Weltall::FFieldSeeThroughHole& Hole : Draw.SeeThroughHoles)
 		{
 			Shapes.Feet[Shapes.Count] = FVector4f(Place(Hole.Feet), Hole.HalfWidth);
@@ -500,6 +502,7 @@ namespace
 						}
 						PixelParameters.SeeThroughCount = SeeThrough.Count;
 						PixelParameters.SeeThroughUp = SeeThrough.Up;
+						PixelParameters.SeeThroughWiden = SeeThrough.Widen;
 						SetShaderParameters(RHICmdList, PixelShader, PixelShader.GetPixelShader(), PixelParameters);
 						RHICmdList.DrawPrimitive(0, Run.VertexCount / 3, 1);
 					}

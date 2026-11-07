@@ -684,8 +684,8 @@ bool FFieldGearSeeThroughRenderingTest::RunTest(const FString&)
 	{
 		const FString Name = Sorting == EFieldSorting::PaintersOrder ? TEXT("painter's order") : TEXT("depth buffer");
 		const TArray<FColor> Hidden = Render(true, Weltall::EFieldSeeThrough::Off, Sorting);
-		const TArray<FColor> Seen = Render(true, Weltall::EFieldSeeThrough::On, Sorting);
-		const TArray<FColor> Stranger = Render(false, Weltall::EFieldSeeThrough::On, Sorting);
+		const TArray<FColor> Seen = Render(true, Weltall::EFieldSeeThrough::Normal, Sorting);
+		const TArray<FColor> Stranger = Render(false, Weltall::EFieldSeeThrough::Normal, Sorting);
 		// The triangle's middle, 30 units below its top: (160, 128) on the screen.
 		NearIn(Hidden, Name + TEXT(", off: the scenery hides the gear"), 160, 128, 0, 255, 0);
 		NearIn(Seen, Name + TEXT(", on: the party's gear shows through"), 160, 128, 0, 0, 255);

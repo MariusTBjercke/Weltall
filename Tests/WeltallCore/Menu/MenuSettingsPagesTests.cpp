@@ -458,14 +458,19 @@ TEST_CASE("The options' choices wrap, and their numbers step within their ranges
 	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 17, -1, Settings, bCustomPicked));
 	CHECK(Settings.Field.BattleFlashes == EBattleFlashes::Off);
 
-	// The scenery in front of the party: seen through about them at first, then as the original draws it, round.
+	// The scenery in front of the party: seen through about them in a bubble of the normal size at first, then a large
+	// one, none (as the original draws it), a small one, round to the normal.
 	CHECK(FSettingsPages::Row(ESettingsPage::Display, 18, Settings).Label == Text::Display::SeeThrough.Label);
-	CHECK(FSettingsPages::Row(ESettingsPage::Display, 18, Settings).Value == "On");
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 18, Settings).Value == "Normal");
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 18, 1, Settings, bCustomPicked));
+	CHECK(Settings.Field.SeeThrough == EFieldSeeThrough::Large);
 	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 18, 1, Settings, bCustomPicked));
 	CHECK(Settings.Field.SeeThrough == EFieldSeeThrough::Off);
 	CHECK(FSettingsPages::Row(ESettingsPage::Display, 18, Settings).Value == "Off");
 	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 18, 1, Settings, bCustomPicked));
-	CHECK(Settings.Field.SeeThrough == EFieldSeeThrough::On);
+	CHECK(Settings.Field.SeeThrough == EFieldSeeThrough::Small);
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 18, 1, Settings, bCustomPicked));
+	CHECK(Settings.Field.SeeThrough == EFieldSeeThrough::Normal);
 
 	// In the background the game stops and is silent, unless set otherwise.
 	CHECK(FSettingsPages::Row(ESettingsPage::Display, 19, Settings).Value == Text::On);

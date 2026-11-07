@@ -212,6 +212,7 @@ void AddFieldSeeThroughHoles(const Weltall::FFieldScene& Scene, const Weltall::F
 	Draw.SeeThroughHoles.Reset();
 	// The identity follows the scenery's models; the gears' rows follow it.
 	Draw.SeeThroughObject = Mesh.FirstGearObject() - 1;
+	Draw.SeeThroughWiden = Weltall::SeeThroughWiden(Options.SeeThrough);
 	if (Options.SeeThrough == Weltall::EFieldSeeThrough::Off)
 	{
 		return;

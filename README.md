@@ -37,7 +37,8 @@ in a bug report.
 - **Smooth motion at any refresh rate**, including 120 Hz and above, without changing the game's pace.
 - **A free camera** on the field and world map, with rotation, tilt and zoom using a mouse or right stick.
 - **See-through scenery**: trees, rocks and walls between the camera and your party are thinned out around them, so
-  you can see where you walk. Cutscenes keep the original framing. **Options → Display → See-through scenery**.
+  you can see where you walk. Cutscenes keep the original framing. **Options → Display → See-through scenery** sets the
+  bubble's size (Small, Normal or Large) or turns it off.
 - **Per-pixel depth sorting** to fix characters, Gears and scenery clipping or flickering over each other.
 - **Graphics options** for sharper or smoother scenery and sprites, anti-aliasing, upscaled movies, a CRT filter and
   integer scaling.

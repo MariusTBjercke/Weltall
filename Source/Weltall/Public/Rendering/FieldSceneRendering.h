@@ -290,6 +290,8 @@ struct FFieldSceneDraw
 	TArray<Weltall::FFieldSeeThroughHole, TInlineAllocator<Weltall::FieldSeeThroughHoles>> SeeThroughHoles;
 	/** The object whose rows place the holes: the identity the characters' quads are drawn by. */
 	uint32 SeeThroughObject = 0;
+	/** The bubble's radius over a sprite's half height, as the player chose its size (Weltall::SeeThroughWiden). */
+	float SeeThroughWiden = Weltall::FieldSeeThrough::Widen;
 	FFieldPictureStretch PictureStretch;
 
 	static constexpr uint32 NoRedirect = 0xFFFFFFFF;

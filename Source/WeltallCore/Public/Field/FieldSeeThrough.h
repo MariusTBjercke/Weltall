@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Field/FieldRenderOptions.h"
 #include "Foundation/Types.h"
 
 #include <array>
@@ -14,7 +15,7 @@ namespace Weltall
 	/**
 	 * A party member's sprite as the scenery in front of it is seen through (EFieldSeeThrough): the middles of its
 	 * feet and of its head and its half width, in view space (x right, y down, z ahead). The hole is a round bubble on the
-	 * screen about its middle, FieldSeeThrough::Widen times its half height across, taking away only what stands above
+	 * screen about its middle, SeeThroughWiden times its half height across, taking away only what stands above
 	 * the floor it stands on, so the ground before its feet stays.
 	 */
 	struct FFieldSeeThroughHole
@@ -34,7 +35,7 @@ namespace Weltall
 		inline constexpr float DepthMargin = 32.0f;
 		/** Over how much more depth it fades from drawn to seen through. */
 		inline constexpr float DepthFade = 64.0f;
-		/** The bubble's radius over the sprite's half height (or half width, when wider). */
+		/** The bubble's radius over the sprite's half height (or half width, when wider), at the normal size. */
 		inline constexpr float Widen = 3.0f;
 		/** The share of the bubble's radius its edge fades over. */
 		inline constexpr float Edge = 0.35f;
@@ -69,6 +70,22 @@ namespace Weltall
 		uint32 LastTick = 0;
 		bool bStarted = false;
 	};
+
+	/** The bubble's radius over a sprite's half height at a size the player chose: none while see-through is off. */
+	constexpr float SeeThroughWiden(EFieldSeeThrough Size)
+	{
+		switch (Size)
+		{
+		case EFieldSeeThrough::Small:
+			return 2.0f;
+		case EFieldSeeThrough::Normal:
+			return FieldSeeThrough::Widen;
+		case EFieldSeeThrough::Large:
+			return 4.5f;
+		default:
+			return 0.0f;
+		}
+	}
 
 	/** Whether the actor stands for one of the party's filled slots. */
 	WELTALLCORE_API bool IsPartyActor(const FEventContext& Context, int32 Actor);
@@ -107,5 +124,6 @@ namespace Weltall
 	 * (unit length); without one (zero), what lies below the sprite's feet on the screen is kept instead. FieldScene.usf's
 	 * SeeThroughShare is the same.
 	 */
-	WELTALLCORE_API float SeeThroughShare(const FFieldSeeThroughHole& Hole, const std::array<float, 3>& View, const std::array<float, 3>& Up);
+	WELTALLCORE_API float SeeThroughShare(const FFieldSeeThroughHole& Hole, const std::array<float, 3>& View, const std::array<float, 3>& Up,
+		float Widen = FieldSeeThrough::Widen);
 }

@@ -65,6 +65,12 @@ TEST_CASE("The scenery is seen through in a round bubble about the sprite, in fr
 	CHECK(SeeThroughShare(Hole, {0.0f, (-0.016f - 0.9f * Radius) * 500.0f, 500.0f}, Up) == Catch::Approx(0.1f / FieldSeeThrough::Edge).margin(0.01));
 	// Behind the eye: none.
 	CHECK(SeeThroughShare(Hole, {0.0f, -8.0f, -10.0f}, Up) == 0.0f);
+	// The sizes the player chooses: the edge of the normal bubble lies within the large one, beyond the small one.
+	CHECK(SeeThroughWiden(EFieldSeeThrough::Off) == 0.0f);
+	CHECK(SeeThroughWiden(EFieldSeeThrough::Small) < SeeThroughWiden(EFieldSeeThrough::Normal));
+	CHECK(SeeThroughWiden(EFieldSeeThrough::Normal) < SeeThroughWiden(EFieldSeeThrough::Large));
+	CHECK(SeeThroughShare(Hole, {Radius * 500.0f, -8.0f, 500.0f}, Up, SeeThroughWiden(EFieldSeeThrough::Large)) > 0.5f);
+	CHECK(SeeThroughShare(Hole, {Radius * 500.0f, -8.0f, 500.0f}, Up, SeeThroughWiden(EFieldSeeThrough::Small)) == 0.0f);
 	// Without the world's up, what lies below its feet on the screen is kept.
 	CHECK(SeeThroughShare(Hole, {0.0f, -8.0f, 500.0f}, {}) == Catch::Approx(1.0f));
 	CHECK(SeeThroughShare(Hole, {0.0f, 4.0f, 500.0f}, {}) == 0.0f);

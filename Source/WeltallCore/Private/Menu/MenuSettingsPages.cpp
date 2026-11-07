@@ -535,7 +535,7 @@ namespace Weltall
 			case Display::MessageBoxBackground:
 				return StepChoice(Settings.Field.MessageBoxBackground, Direction, 2);
 			case Display::SeeThrough:
-				return StepChoice(Settings.Field.SeeThrough, Direction, 2);
+				return StepChoice(Settings.Field.SeeThrough, Direction, 4);
 			case Display::TextSpeed:
 				return StepChoice(Settings.TextSpeed, Direction, 4);
 			case Display::AutoAdvance:

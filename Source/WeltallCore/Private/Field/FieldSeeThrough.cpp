@@ -132,7 +132,7 @@ namespace Weltall
 		return Crossing(Above, Below, A, B, C) >= 0.0f;
 	}
 
-	float SeeThroughShare(const FFieldSeeThroughHole& Hole, const std::array<float, 3>& View, const std::array<float, 3>& Up)
+	float SeeThroughShare(const FFieldSeeThroughHole& Hole, const std::array<float, 3>& View, const std::array<float, 3>& Up, float Widen)
 	{
 		using namespace FieldSeeThrough;
 		if (View[2] <= 1.0f || Hole.Feet[2] <= 1.0f || Hole.Head[2] <= 1.0f)
