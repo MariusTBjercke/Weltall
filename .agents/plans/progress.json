@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "updated": "2026-11-07T10:15:00Z",
+  "items": [
+    {
+      "id": "01",
+      "title": "Set up the fork: remotes, local build, game data and play folder",
+      "status": "in_progress",
+      "owner": "agent",
+      "files": [
+        "local.env",
+        "Scripts/build.ps1",
+        "Scripts/package.py",
+        "AGENTS.md",
+        "CLAUDE.md",
+        ".agents/conventions.md",
+        ".agents/plans/00-context.md",
+        ".agents/plans/01-definition-of-done.md",
+        ".agents/plans/progress.json",
+        ".agents/validation/README.md"
+      ],
+      "verify": "python Scripts/package.py Development  (then) .\\Scripts\\build.ps1 -LinkOnly",
+      "blocked_by": [],
+      "evidence": ".agents/validation/m00-setup.md"
+    },
+    {
+      "id": "02",
+      "title": "Write down the owner's tweak list as work items",
+      "status": "todo",
+      "owner": "",
+      "files": [".agents/plans/progress.json", ".agents/plans/items/"],
+      "verify": "the owner confirms each item is what they meant",
+      "blocked_by": ["the owner's play notes, which are not written down yet"],
+      "evidence": ""
+    }
+  ]
+}
