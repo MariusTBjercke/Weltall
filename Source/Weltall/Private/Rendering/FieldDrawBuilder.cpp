@@ -229,12 +229,21 @@ void FFieldDrawBuilder::Depth(const TItems& Items, bool bSceneryByDepth)
 	// over a sprite. The scenery sorted by depth is drawn against the prepasses everywhere: the order decides
 	// only within the decals' margin.
 	Weltall::EBlendMode Current = Weltall::EBlendMode::Average;
+	// The shadows go last: lying on their floors, they are tested against the depth of all that stands above them
+	// (EFieldRunDepth::OutsideMask), while in the order a piece of the ground they lie on, sorted nearer as the camera
+	// turns, would paint over them.
+	TArray<TPair<FItem, Weltall::EBlendMode>, TInlineAllocator<16>> Shadows;
 	for (const auto& Entry : Items)
 	{
 		const FItem Item = DescribeForDepth(ToItem(Entry), bSceneryByDepth);
 		if (Item.bTextured)
 		{
 			Current = Item.PageBlend;
+		}
+		if (Item.bShadow)
+		{
+			Shadows.Emplace(Item, Current);
+			continue;
 		}
 		const EFieldPass Plain = PlainPass(Item);
 		if (Item.bSprite && !HasOpaqueTexels(Item))
@@ -266,8 +275,12 @@ void FFieldDrawBuilder::Depth(const TItems& Items, bool bSceneryByDepth)
 		}
 		else
 		{
-			AddLayered(Item, Current, Item.bShadow ? EFieldRunDepth::OutsideMask : Item.bBackground ? EFieldRunDepth::None : EFieldRunDepth::Masked, true);
+			AddLayered(Item, Current, Item.bBackground ? EFieldRunDepth::None : EFieldRunDepth::Masked, true);
 		}
+	}
+	for (const TPair<FItem, Weltall::EBlendMode>& Shadow : Shadows)
+	{
+		AddLayered(Shadow.Key, Shadow.Value, EFieldRunDepth::OutsideMask, true);
 	}
 }
 

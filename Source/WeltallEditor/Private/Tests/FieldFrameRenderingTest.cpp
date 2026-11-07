@@ -588,6 +588,45 @@ bool FFieldShadowRenderingTest::RunTest(const FString&)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFieldShadowOrderRenderingTest, "Weltall.Rendering.FieldShadowsStayOnGroundDrawnAfterThem",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FFieldShadowOrderRenderingTest::RunTest(const FString&)
+{
+	const Weltall::FVram Vram = MakeVram();
+	FVramTexture Units;
+	BeginInitResource(&Units);
+	Units.Follow(Vram);
+
+	// A shadow on a floor below the eye, 1000 units ahead, and the grey ground it lies on linked after it, as a turn of a
+	// free camera can sort a piece of ground nearer than a shadow over it.
+	const auto Render = [&Units](bool bShadow, EFieldSorting Sorting)
+	{
+		FTestFrame Test;
+		Test.Sprite(100, 180, 1000, true);
+		Test.Quad(0, 0, 320, 224, FlatQuad, {128, 128, 128});
+		Test.Evaluate();
+		Test.Frame.Order = {{0, Weltall::EFieldDrawKind::Scenery}};
+		if (bShadow)
+		{
+			Test.Frame.Order.insert(Test.Frame.Order.begin(), {0, Weltall::EFieldDrawKind::Character});
+		}
+		return Test.Render(Units, nullptr, 1.0f, Sorting);
+	};
+	const auto At = [](const TArray<FColor>& Pixels, int32 X, int32 Y) { return Pixels[Y * ScreenWidth + X]; };
+	const TArray<FColor> Ground = Render(false, EFieldSorting::PaintersOrder);
+	// The painter's order draws the ground over the shadow, as the original does.
+	TestEqual(TEXT("painter's order: the ground drawn after the shadow covers it"), At(Render(true, EFieldSorting::PaintersOrder), 105, 195), At(Ground, 105, 195));
+	// Against a depth buffer the shadow stays on its ground, whatever their order.
+	for (const EFieldSorting Sorting : {EFieldSorting::DepthBuffer, EFieldSorting::DepthBufferWithScenery})
+	{
+		TestNotEqual(TEXT("depth buffer: the shadow stays on the ground drawn after it"), At(Render(true, Sorting), 105, 195), At(Ground, 105, 195));
+	}
+	BeginReleaseResource(&Units);
+	FlushRenderingCommands();
+	return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFieldPictureRenderingTest, "Weltall.Rendering.FieldPictureOfTheScreenIsDrawnAsTheFieldDrawsIt",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
