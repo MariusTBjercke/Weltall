@@ -34,8 +34,12 @@ STAGING = "/data/local/tmp"
 
 
 def version_code(version):
-    """Android's version code for a version, which grows with every release: 0.8.5 is 805, 1.0.0 is 10000."""
-    major, minor, patch = (int(part) for part in version.split("."))
+    """Android's version code for a version, which grows with every release: 0.8.5 is 805, 1.0.0 is 10000. Only the
+    numbers the version starts with count, so a fork's suffix (1.0.1-fork) is its display name and nothing else."""
+    numbers = re.match(r"(\d+)\.(\d+)\.(\d+)", version)
+    if numbers is None:
+        raise ValueError(f"{version} has no version code: it does not start with three numbers")
+    major, minor, patch = (int(part) for part in numbers.groups())
     if minor > 99 or patch > 99:
         raise ValueError(f"{version} has no version code: its second and third numbers must stay below 100")
     return major * 10000 + minor * 100 + patch
