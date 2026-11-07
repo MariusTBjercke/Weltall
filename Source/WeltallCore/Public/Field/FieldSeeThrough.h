@@ -34,7 +34,7 @@ namespace Weltall
 		/** Over how much more depth it fades from drawn to seen through. */
 		inline constexpr float DepthFade = 64.0f;
 		/** The bubble's radius over the sprite's half height (or half width, when wider). */
-		inline constexpr float Widen = 1.5f;
+		inline constexpr float Widen = 3.0f;
 		/** The share of the bubble's radius its edge fades over. */
 		inline constexpr float Edge = 0.35f;
 		/** How far above the sprite's floor, as shares of its height, the scenery starts to be taken away, and over how much more it fades in. */
