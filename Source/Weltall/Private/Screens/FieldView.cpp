@@ -138,6 +138,8 @@ bool FFieldView::Fill(FFieldScreenFrame& Display, const Weltall::FFieldScene& Sc
 	Display.Alpha = Alpha;
 	Display.Cover = {};
 	Display.Picture = nullptr;
+	Display.MessageRange = Now.MessageRange;
+	Display.MessageBoxScale = Options.MessageBoxScale;
 	if (Shown.Picture.IsValid())
 	{
 		// Full screen the picture alone; over the field the message windows over it, as the frame drew them.
@@ -178,6 +180,12 @@ void FFieldView::ShowTextButtons(FFieldScreenFrame& Display, const Weltall::FFie
 	}
 	const uint32 Primitives = static_cast<uint32>(Display.Layer.Primitives.size());
 	Icons.ApplyToText(Display.Layer, Now.TextButtons, *Glyphs, Display.bPreviousLayer ? &Display.Matches : nullptr, &Display.Cover.LayerIndex);
+	const uint32 Grown = static_cast<uint32>(Display.Layer.Primitives.size());
+	// The pictures are cut out of the message text's own lines, which lie inside the windows: only that range's end moves.
+	if (Display.MessageRange[0] < Display.MessageRange[1] && Grown != Primitives)
+	{
+		Display.MessageRange[1] = static_cast<uint32>(static_cast<int64>(Display.MessageRange[1]) + static_cast<int64>(Grown) - static_cast<int64>(Primitives));
+	}
 	if (Display.Layer.Primitives.size() != Primitives)
 	{
 		IconVram->Follow(Icons.Pictures());

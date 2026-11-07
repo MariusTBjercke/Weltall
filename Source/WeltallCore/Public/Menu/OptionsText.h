@@ -90,6 +90,10 @@ namespace Weltall::OptionsText
 		inline constexpr std::array<std::string_view, 3> BattleSpeedValues{"Normal", "2x", "4x"};
 		inline constexpr FRow BattleFlashes{"Battle flashes", {"Softer dims the screen flashes", "of attacks and Ethers. Off", "removes them."}};
 		inline constexpr std::array<std::string_view, 3> BattleFlashesValues{"Original", "Softer", "Off"};
+		inline constexpr FRow MessageBoxScale{"Text box size", {"Original follows the picture.", "Whole pixels makes each letter", "even. Smaller is a step lower."}};
+		inline constexpr std::array<std::string_view, 3> MessageBoxScaleValues{"Original", "Whole pixels", "Smaller"};
+		inline constexpr FRow MessageBoxBackground{"Text box shading", {"Original darkens the scene", "behind the box. Solid hides", "it, so text keeps contrast."}};
+		inline constexpr std::array<std::string_view, 2> MessageBoxBackgroundValues{"Original", "Solid"};
 		inline constexpr FRow PauseInBackground{"Pause in background", {"Pauses the game when its", "window isn't in focus. Play", "time stops too."}};
 	}
 

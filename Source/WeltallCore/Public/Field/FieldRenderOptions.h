@@ -83,6 +83,26 @@ namespace Weltall
 		Off,
 	};
 
+	/** How the message windows are scaled on the display. */
+	enum class EMessageBoxScale : uint8
+	{
+		/** With the picture, at whatever fraction of a display pixel a pixel it is drawn at (the original's). */
+		Original,
+		/** At a whole number of display pixels a pixel, as many as the picture's own scale holds: every pixel a square. */
+		Whole,
+		/** As Whole, one display pixel a pixel less: a box smaller and as even, for a display whose scale is high. */
+		Smaller,
+	};
+
+	/** What a message window's background does to what lies behind it. */
+	enum class EMessageBoxBackground : uint8
+	{
+		/** The kernel's: the box darkens the scene through it, so bright things behind still show (the original's). */
+		Original,
+		/** An opaque box: the scene behind is hidden, and the text keeps its contrast whatever lies there. */
+		Solid,
+	};
+
 	/**
 	 * The ways the field can be presented, each the player's choice. The defaults sort everything by depth (the
 	 * scenery's decals in the original's order), keep the texels sharp, smooth only polygon edges, draw
@@ -108,6 +128,8 @@ namespace Weltall
 		 */
 		EFieldGearModels GearModels = EFieldGearModels::OutsideCutscenes;
 		EBattleFlashes BattleFlashes = EBattleFlashes::Original;
+		EMessageBoxScale MessageBoxScale = EMessageBoxScale::Original;
+		EMessageBoxBackground MessageBoxBackground = EMessageBoxBackground::Original;
 
 		bool operator==(const FFieldRenderOptions&) const = default;
 	};

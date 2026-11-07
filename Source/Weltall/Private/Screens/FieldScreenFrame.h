@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Field/FieldFrame.h"
+#include "Field/FieldRenderOptions.h"
 #include "Presentation/DrawList.h"
 #include "RenderGraphResources.h"
 #include "Rendering/FieldSceneRendering.h"
@@ -98,6 +99,13 @@ public:
 	TSharedPtr<FFieldCoverPicture> Picture;
 	/** The player's button pictures the layer's text shows (Weltall::FMenuButtonIcons::PicturesVram), when it shows any. */
 	TSharedPtr<FVramTexture> IconVram;
+	/**
+	 * The message windows' primitives in Layer (Weltall::FFieldFrame::MessageRange), and how the player has them scaled: at
+	 * a whole number of display pixels a pixel of their own, so their letters stay even rather than stretched by the
+	 * picture's fraction of one.
+	 */
+	std::array<uint32, 2> MessageRange{};
+	Weltall::EMessageBoxScale MessageBoxScale = Weltall::EMessageBoxScale::Original;
 
 	const TSharedRef<const FFieldSceneMesh>& GetMesh() const { return Mesh; }
 

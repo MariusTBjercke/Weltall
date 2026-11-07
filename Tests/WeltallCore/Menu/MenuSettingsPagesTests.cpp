@@ -386,60 +386,81 @@ TEST_CASE("The options' choices wrap, and their numbers step within their ranges
 	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 11, 1, Settings, bCustomPicked));
 	CHECK_FALSE(Settings.bChapterCards);
 
+	// The message boxes' size: the picture's own scale at first, then a whole number of display pixels a pixel, then one
+	// less of them, round to the picture's.
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 12, Settings).Label == Text::Display::MessageBoxScale.Label);
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 12, Settings).Value == Text::Display::MessageBoxScaleValues[0]);
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 12, 1, Settings, bCustomPicked));
+	CHECK(Settings.Field.MessageBoxScale == EMessageBoxScale::Whole);
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 12, Settings).Value == "Whole pixels");
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 12, 1, Settings, bCustomPicked));
+	CHECK(Settings.Field.MessageBoxScale == EMessageBoxScale::Smaller);
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 12, 1, Settings, bCustomPicked));
+	CHECK(Settings.Field.MessageBoxScale == EMessageBoxScale::Original);
+
+	// The message boxes' background: the kernel's subtract at first, then an opaque box, round to the subtract.
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 13, Settings).Label == Text::Display::MessageBoxBackground.Label);
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 13, Settings).Value == Text::Display::MessageBoxBackgroundValues[0]);
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 13, 1, Settings, bCustomPicked));
+	CHECK(Settings.Field.MessageBoxBackground == EMessageBoxBackground::Solid);
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 13, Settings).Value == "Solid");
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 13, 1, Settings, bCustomPicked));
+	CHECK(Settings.Field.MessageBoxBackground == EMessageBoxBackground::Original);
+
 	// The text speed: twice the original's at first; the original's, then twice, four times and a page at once, round
 	// to the original.
-	CHECK(FSettingsPages::Row(ESettingsPage::Display, 12, Settings).Value == "2x");
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 12, -1, Settings, bCustomPicked));
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 14, Settings).Value == "2x");
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 14, -1, Settings, bCustomPicked));
 	CHECK(Settings.TextSpeed == EMesTextSpeed::Original);
-	CHECK(FSettingsPages::Row(ESettingsPage::Display, 12, Settings).Value == Text::Display::TextSpeedValues[0]);
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 12, -1, Settings, bCustomPicked));
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 14, Settings).Value == Text::Display::TextSpeedValues[0]);
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 14, -1, Settings, bCustomPicked));
 	CHECK(Settings.TextSpeed == EMesTextSpeed::Instant);
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 12, 1, Settings, bCustomPicked));
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 12, 1, Settings, bCustomPicked));
-	CHECK(FSettingsPages::Row(ESettingsPage::Display, 12, Settings).Value == "2x");
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 14, 1, Settings, bCustomPicked));
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 14, 1, Settings, bCustomPicked));
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 14, Settings).Value == "2x");
 
 	// Auto-advancing text: off at first, then slow, normal and fast, round to off.
-	CHECK(FSettingsPages::Row(ESettingsPage::Display, 13, Settings).Label == Text::Display::AutoAdvance.Label);
-	CHECK(FSettingsPages::Row(ESettingsPage::Display, 13, Settings).Value == Text::Display::AutoAdvanceValues[0]);
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 13, 1, Settings, bCustomPicked));
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 15, Settings).Label == Text::Display::AutoAdvance.Label);
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 15, Settings).Value == Text::Display::AutoAdvanceValues[0]);
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 15, 1, Settings, bCustomPicked));
 	CHECK(Settings.AutoAdvance == EMesAutoAdvance::Slow);
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 13, 1, Settings, bCustomPicked));
-	CHECK(FSettingsPages::Row(ESettingsPage::Display, 13, Settings).Value == "Normal");
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 13, 1, Settings, bCustomPicked));
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 15, 1, Settings, bCustomPicked));
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 15, Settings).Value == "Normal");
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 15, 1, Settings, bCustomPicked));
 	CHECK(Settings.AutoAdvance == EMesAutoAdvance::Fast);
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 13, 1, Settings, bCustomPicked));
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 15, 1, Settings, bCustomPicked));
 	CHECK(Settings.AutoAdvance == EMesAutoAdvance::Off);
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 13, -1, Settings, bCustomPicked));
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 15, -1, Settings, bCustomPicked));
 	CHECK(Settings.AutoAdvance == EMesAutoAdvance::Fast);
 
 	// The battle speed: the game's own, then twice and four times it, round to the game's own.
-	CHECK(FSettingsPages::Row(ESettingsPage::Display, 14, Settings).Label == Text::Display::BattleSpeed.Label);
-	CHECK(FSettingsPages::Row(ESettingsPage::Display, 14, Settings).Value == Text::Display::BattleSpeedValues[0]);
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 14, 1, Settings, bCustomPicked));
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 16, Settings).Label == Text::Display::BattleSpeed.Label);
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 16, Settings).Value == Text::Display::BattleSpeedValues[0]);
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 16, 1, Settings, bCustomPicked));
 	CHECK(Settings.BattleSpeed == EBattleSpeed::Double);
-	CHECK(FSettingsPages::Row(ESettingsPage::Display, 14, Settings).Value == "2x");
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 14, 1, Settings, bCustomPicked));
-	CHECK(FSettingsPages::Row(ESettingsPage::Display, 14, Settings).Value == "4x");
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 14, 1, Settings, bCustomPicked));
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 16, Settings).Value == "2x");
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 16, 1, Settings, bCustomPicked));
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 16, Settings).Value == "4x");
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 16, 1, Settings, bCustomPicked));
 	CHECK(Settings.BattleSpeed == EBattleSpeed::Normal);
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 14, -1, Settings, bCustomPicked));
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 16, -1, Settings, bCustomPicked));
 	CHECK(Settings.BattleSpeed == EBattleSpeed::Quadruple);
 
 	// The battle effects' flashes: the original's, then softer and none, round to the original's.
-	CHECK(FSettingsPages::Row(ESettingsPage::Display, 15, Settings).Label == Text::Display::BattleFlashes.Label);
-	CHECK(FSettingsPages::Row(ESettingsPage::Display, 15, Settings).Value == "Original");
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 15, 1, Settings, bCustomPicked));
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 17, Settings).Label == Text::Display::BattleFlashes.Label);
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 17, Settings).Value == "Original");
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 17, 1, Settings, bCustomPicked));
 	CHECK(Settings.Field.BattleFlashes == EBattleFlashes::Softer);
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 15, 1, Settings, bCustomPicked));
-	CHECK(FSettingsPages::Row(ESettingsPage::Display, 15, Settings).Value == "Off");
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 15, 1, Settings, bCustomPicked));
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 17, 1, Settings, bCustomPicked));
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 17, Settings).Value == "Off");
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 17, 1, Settings, bCustomPicked));
 	CHECK(Settings.Field.BattleFlashes == EBattleFlashes::Original);
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 15, -1, Settings, bCustomPicked));
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 17, -1, Settings, bCustomPicked));
 	CHECK(Settings.Field.BattleFlashes == EBattleFlashes::Off);
 
 	// In the background the game stops and is silent, unless set otherwise.
-	CHECK(FSettingsPages::Row(ESettingsPage::Display, 16, Settings).Value == Text::On);
-	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 16, 1, Settings, bCustomPicked));
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, 18, Settings).Value == Text::On);
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Display, 18, 1, Settings, bCustomPicked));
 	CHECK_FALSE(Settings.Display.bPauseInBackground);
 	CHECK(FSettingsPages::Row(ESettingsPage::Sound, SoundRow::InBackground, Settings).Value == Text::Off);
 	REQUIRE(FSettingsPages::Step(ESettingsPage::Sound, SoundRow::InBackground, 1, Settings, bCustomPicked));

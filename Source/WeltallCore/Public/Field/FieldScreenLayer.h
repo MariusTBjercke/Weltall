@@ -34,9 +34,12 @@ namespace Weltall
 	 * full-screen tiles that cover the whole display whatever its width; the rest is placed on the
 	 * 320 x 224 screen, and all of it clipped to the scripts' drawing area when they narrow it.
 	 * Primitives that move or change between ticks carry blend keys. Layer's memory is reused. Each
-	 * window is shown WindowShifts' pixels (when given) from where the game placed it.
+	 * window is shown WindowShifts' pixels (when given) from where the game placed it. With
+	 * bSolidMessageBox a window's background is opaque black rather than the kernel's subtract, which
+	 * darkens what lies behind it; MessageRange, when given, takes where the windows' primitives begin
+	 * and end, so a display can draw them at a scale of its own.
 	 */
 	WELTALLCORE_API uint32 BuildFieldScreenLayer(const FEventContext& Context, const FFieldDrawingTables& Tables, EFieldFrame Kind, FDrawList& Layer,
 		const FFieldCompassFrame* Compass = nullptr, const std::array<std::array<int16, 2>, 4>* WindowShifts = nullptr,
-		std::vector<FTextButtonCell>* TextButtons = nullptr);
+		std::vector<FTextButtonCell>* TextButtons = nullptr, bool bSolidMessageBox = false, std::array<uint32, 2>* MessageRange = nullptr);
 }

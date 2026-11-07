@@ -166,6 +166,12 @@ namespace Weltall
 		FVramRect DrawClip{0, 0, FFieldScreenWave::ScreenWidth, FFieldScreenWave::ScreenHeight};
 		/** The button glyphs in the 2D layer's message text, which a display shows as the player's buttons. */
 		std::vector<FTextButtonCell> TextButtons;
+		/**
+		 * Where the message windows' primitives begin and end in the 2D layer: a display may draw that stretch at a scale of
+		 * its own, so the boxes are not stretched by the picture's fraction of a display pixel a pixel (empty when no window
+		 * is open).
+		 */
+		std::array<uint32, 2> MessageRange{};
 		/** The matrices the tick drew with, and the player's offsets they show. */
 		FFieldView View;
 		FFieldViewOffsets ShownOffsets;

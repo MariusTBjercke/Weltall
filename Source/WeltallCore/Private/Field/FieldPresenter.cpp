@@ -250,6 +250,11 @@ namespace Weltall
 		}
 	}
 
+	void FFieldPresenter::SetSolidMessageBox(bool bOn)
+	{
+		bSolidMessageBox = bOn;
+	}
+
 	void FFieldPresenter::SetGearStandIns(EFieldGearModels Where)
 	{
 		if (Where == EFieldGearModels::Off)

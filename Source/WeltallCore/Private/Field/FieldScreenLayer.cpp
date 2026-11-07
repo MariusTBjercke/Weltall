@@ -30,6 +30,8 @@ namespace Weltall
 		constexpr int32 TextClutStride = 16;
 		/** The windows' background: this colour subtracted from the scene behind the frame. */
 		constexpr FDrawColor BackgroundColor{0x88, 0x76, 0x54};
+		/** The same where the player wants the box to hide the scene: the brightest scene darkened past seeing, and even. */
+		constexpr FDrawColor SolidBackgroundColor{0, 0, 0};
 		constexpr FDrawColor Neutral{128, 128, 128};
 		/** The system images' 4-bit page and the CLUTs of the frame and the cursors. */
 		constexpr FTexturePage FramePage{640, 256, ETextureDepth::Indexed4, EBlendMode::Subtract};
@@ -101,8 +103,9 @@ namespace Weltall
 		class FLayerBuilder
 		{
 		public:
-			FLayerBuilder(const FEventContext& InContext, const FFieldDrawingTables& InTables, FDrawList& InLayer, std::vector<FTextButtonCell>* InButtons)
-				: Context(InContext), Tables(InTables), Layer(InLayer), Buttons(InButtons)
+			FLayerBuilder(const FEventContext& InContext, const FFieldDrawingTables& InTables, FDrawList& InLayer, std::vector<FTextButtonCell>* InButtons,
+				bool bInSolidMessageBox)
+				: Context(InContext), Tables(InTables), Layer(InLayer), Buttons(InButtons), bSolidMessageBox(bInSolidMessageBox)
 			{
 			}
 
@@ -151,9 +154,9 @@ namespace Weltall
 				const int32 CursorFrame = std::clamp(Context.Messages.CursorFrame, 0, FFieldDrawingTables::CursorFrames - 1);
 				if (bBackground)
 				{
-					FDrawPrimitive Box = Rectangle(Rect.X, Rect.Y + 1, Rect.Width, Rect.Height - 2, BackgroundColor);
+					FDrawPrimitive Box = Rectangle(Rect.X, Rect.Y + 1, Rect.Width, Rect.Height - 2, bSolidMessageBox ? SolidBackgroundColor : BackgroundColor);
 					Box.bGouraud = false;
-					Box.Blend = EDrawBlend::SemiTransparent;
+					Box.Blend = bSolidMessageBox ? EDrawBlend::Opaque : EDrawBlend::SemiTransparent;
 					Box.UntexturedBlend = EBlendMode::Subtract;
 					Box.BlendKey = Key | 1;
 					Layer.Primitives.push_back(Box);
@@ -310,6 +313,8 @@ namespace Weltall
 			FDrawList& Layer;
 			std::vector<FTextButtonCell>* Buttons = nullptr;
 			FMesButtonCells Cells;
+			/** The windows' background is opaque black rather than the kernel's subtract. */
+			bool bSolidMessageBox = false;
 		};
 
 		/**
@@ -409,7 +414,8 @@ namespace Weltall
 	}
 
 	uint32 BuildFieldScreenLayer(const FEventContext& Context, const FFieldDrawingTables& Tables, EFieldFrame Kind, FDrawList& Layer,
-		const FFieldCompassFrame* Compass, const std::array<std::array<int16, 2>, 4>* WindowShifts, std::vector<FTextButtonCell>* TextButtons)
+		const FFieldCompassFrame* Compass, const std::array<std::array<int16, 2>, 4>* WindowShifts, std::vector<FTextButtonCell>* TextButtons,
+		bool bSolidMessageBox, std::array<uint32, 2>* MessageRange)
 	{
 		Layer.Primitives.clear();
 		if (TextButtons != nullptr)
@@ -422,8 +428,11 @@ namespace Weltall
 			FieldScreenPieces::AddMapPicture(Render.MapPicture, Layer);
 			return static_cast<uint32>(Layer.Primitives.size());
 		}
-		FLayerBuilder Builder(Context, Tables, Layer, TextButtons);
+		FLayerBuilder Builder(Context, Tables, Layer, TextButtons, bSolidMessageBox);
 		uint32 CoverAt = 0;
+		// Where the message windows' primitives lie in the layer, so a display can draw them at its own scale.
+		uint32 MessageFirst = 0;
+		uint32 MessageLast = 0;
 		if (Kind == EFieldFrame::MapFade)
 		{
 			// The fade frames link the picture after the fade layers: it is drawn under the map's.
@@ -446,6 +455,7 @@ namespace Weltall
 				FieldScreenPieces::AddCompass(*Compass, Layer);
 			}
 			Builder.Fade(1);
+			MessageFirst = static_cast<uint32>(Layer.Primitives.size());
 			std::array<int32, FFieldMessages::WindowCount> Turns{};
 			for (int32 Turn = WindowTurns(Context.Messages, Turns); Turn-- > 0;)
 			{
@@ -462,6 +472,7 @@ namespace Weltall
 					}
 				}
 			}
+			MessageLast = static_cast<uint32>(Layer.Primitives.size());
 			if (Render.bHiResStill)
 			{
 				FieldScreenPieces::AddHiResStill(Layer);
@@ -503,6 +514,11 @@ namespace Weltall
 				Primitive.Clip.X = static_cast<int16>(Primitive.Clip.X / 2);
 				Primitive.Clip.Width = static_cast<int16>((Primitive.Clip.Width + 1) / 2);
 			}
+		}
+		if (MessageRange != nullptr)
+		{
+			(*MessageRange)[0] = MessageFirst;
+			(*MessageRange)[1] = MessageLast;
 		}
 		return CoverAt;
 	}

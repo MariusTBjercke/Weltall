@@ -135,6 +135,29 @@ void FFieldScreenFrame::AddPasses(FRDGBuilder& GraphBuilder, FRDGTextureRef Outp
 	const bool bScreenPicture = Cover.bShown && Cover.bScreen && Picture.IsValid();
 	FRDGTextureRef PictureTexture = bScreenPicture ? Picture->Texture(GraphBuilder, Area) : nullptr;
 	const FIntRect ScreenRect = Area.ScreenRect(FieldScreen);
+	const std::size_t CoverAt = FMath::Min<std::size_t>(Cover.LayerIndex, Layer.Primitives.size());
+	// The message windows at a whole number of display pixels a pixel of their own, centred and standing on the bottom of
+	// the area the picture would have them in: their letters stay even rather than stretched by the picture's fraction of
+	// a pixel, and the rest of the screen keeps the scale it had.
+	const std::size_t WindowFirst = FMath::Min<std::size_t>(MessageRange[0], CoverAt);
+	const std::size_t WindowLast = FMath::Min<std::size_t>(MessageRange[1], CoverAt);
+	FIntRect WindowRect = ScreenRect;
+	bool bOwnWindowScale = false;
+	if (MessageBoxScale != Weltall::EMessageBoxScale::Original && WindowLast > WindowFirst)
+	{
+		const double PictureScale = Area.Layout(FieldScreen).Scale();
+		const int32 Whole = FMath::Max(1, FMath::FloorToInt(PictureScale));
+		const int32 Chosen = FMath::Max(1, MessageBoxScale == Weltall::EMessageBoxScale::Smaller ? Whole - 1 : Whole);
+		// Nothing to do where the picture is already drawn at whole pixels.
+		if (Chosen != FMath::RoundToInt32(PictureScale))
+		{
+			const int32 Width = FieldScreen.Width * Chosen;
+			const int32 Height = FieldScreen.Height * Chosen;
+			const FIntPoint Min(ScreenRect.Min.X + (ScreenRect.Width() - Width) / 2, ScreenRect.Max.Y - Height);
+			WindowRect = FIntRect(Min, Min + FIntPoint(Width, Height));
+			bOwnWindowScale = true;
+		}
+	}
 	if (MoviePicture.IsValid())
 	{
 		const Weltall::FScreenRect WholeScreen{0, 0, static_cast<int16>(FieldScreen.Width), static_cast<int16>(FieldScreen.Height)};
@@ -145,19 +168,29 @@ void FFieldScreenFrame::AddPasses(FRDGBuilder& GraphBuilder, FRDGTextureRef Outp
 		AddFieldScenePasses(GraphBuilder, *Mesh, *Vram, Draw, Output, Area.Rows(FieldScreen));
 	}
 	FDrawListFrame Frame{&Layer, bPreviousLayer ? &PreviousLayer : nullptr, bPreviousLayer ? &Matches : nullptr, Alpha};
-	Frame.End = Cover.LayerIndex;
-	const auto AddLayer = [&]()
+	const auto AddLayer = [&](const FIntRect& Rect, std::size_t First, std::size_t End)
 	{
+		Frame.First = First;
+		Frame.End = End;
 		if (IconVram.IsValid())
 		{
-			AddIconDrawListPasses(GraphBuilder, *Vram, *IconVram, Frame, Output, ScreenRect, FieldScreen);
+			AddIconDrawListPasses(GraphBuilder, *Vram, *IconVram, Frame, Output, Rect, FieldScreen);
 		}
 		else
 		{
-			AddDrawListPasses(GraphBuilder, *Vram, Frame, Output, ScreenRect, FieldScreen);
+			AddDrawListPasses(GraphBuilder, *Vram, Frame, Output, Rect, FieldScreen);
 		}
 	};
-	AddLayer();
+	if (bOwnWindowScale)
+	{
+		AddLayer(ScreenRect, 0, WindowFirst);
+		AddLayer(WindowRect, WindowFirst, WindowLast);
+		AddLayer(ScreenRect, WindowLast, CoverAt);
+	}
+	else
+	{
+		AddLayer(ScreenRect, 0, CoverAt);
+	}
 	if (PictureTexture != nullptr)
 	{
 		// The picture covers the whole area it was drawn at, scaled about its centre.
@@ -179,7 +212,5 @@ void FFieldScreenFrame::AddPasses(FRDGBuilder& GraphBuilder, FRDGTextureRef Outp
 		Drawn.Scissor = Area;
 		AddFieldPicturePass(GraphBuilder, PictureTexture, Output, Drawn);
 	}
-	Frame.First = Cover.LayerIndex;
-	Frame.End = Layer.Primitives.size();
-	AddLayer();
+	AddLayer(ScreenRect, CoverAt, Layer.Primitives.size());
 }

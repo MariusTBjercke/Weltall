@@ -64,7 +64,8 @@ namespace Weltall
 		Picture.Scale = Cover.Scale;
 		Picture.Taken = Cover.Taken;
 		PlaceWindowsForView(Context, Shown);
-		Picture.LayerIndex = BuildFieldScreenLayer(Context, DrawingTables, Runtime.LastFrame(), Frame.Screen, &CompassFrame, &WindowShifts, &Frame.TextButtons);
+		Picture.LayerIndex = BuildFieldScreenLayer(Context, DrawingTables, Runtime.LastFrame(), Frame.Screen, &CompassFrame, &WindowShifts, &Frame.TextButtons,
+			bSolidMessageBox, &Frame.MessageRange);
 	}
 
 	std::optional<FError> FFieldPresenter::FollowMapPicture(const FFieldMapPicture& Picture)

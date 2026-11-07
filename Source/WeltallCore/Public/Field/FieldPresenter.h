@@ -79,6 +79,11 @@ namespace Weltall
 		 */
 		WELTALLCORE_API void SetGearStandIns(EFieldGearModels Where);
 		const FFieldGearStandIns* GearStandIns() const { return GearModels.get(); }
+		/**
+		 * Whether a message window's background is opaque black, from the next tick: off, the box darkens what lies behind
+		 * it with the kernel's subtract, as the original does (EMessageBoxBackground).
+		 */
+		WELTALLCORE_API void SetSolidMessageBox(bool bOn);
 		/** Whether the field plays a cutscene, as the last tick drew its sprites. */
 		const FFieldCutscenes& Cutscenes() const { return CutsceneWatch; }
 
@@ -218,6 +223,8 @@ namespace Weltall
 		/** The gears' models for their sprites, while the player has them drawn; and whether in cutscenes too. */
 		std::unique_ptr<FFieldGearStandIns> GearModels;
 		bool bGearModelsInCutscenes = false;
+		/** A message window's background is opaque black rather than the kernel's subtract. */
+		bool bSolidMessageBox = false;
 		/** The party in its player's order; a pointer, so that the presenter moves. */
 		std::unique_ptr<FFieldMemberStandIns> Members;
 		/**

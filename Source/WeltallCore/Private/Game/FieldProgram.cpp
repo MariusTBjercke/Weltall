@@ -128,6 +128,7 @@ namespace Weltall
 		Culling = Settings.Field.Culling;
 		Presenter->SetPilotStandIns(Settings.Field.bDetailedPilots);
 		Presenter->SetGearStandIns(Settings.Field.GearModels);
+		Presenter->SetSolidMessageBox(Settings.Field.MessageBoxBackground == EMessageBoxBackground::Solid);
 		SettingsSeen = Session.SettingsRevision();
 	}
 

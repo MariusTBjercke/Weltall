@@ -153,8 +153,8 @@ namespace Weltall
 
 		namespace Display
 		{
-			enum : int32 { FullScreen, WindowSize, Aspect, IntegerScaling, Sorting, SceneryFilter, SpriteFilter, MovieFilter, Crt, AntiAliasing, Culling, Pilots, Gears, ChapterCards, TextSpeed, AutoAdvance,
-				BattleSpeed, BattleFlashes, BackgroundPause, Count };
+			enum : int32 { FullScreen, WindowSize, Aspect, IntegerScaling, Sorting, SceneryFilter, SpriteFilter, MovieFilter, Crt, AntiAliasing, Culling, Pilots, Gears, ChapterCards, MessageBoxScale,
+				MessageBoxBackground, TextSpeed, AutoAdvance, BattleSpeed, BattleFlashes, BackgroundPause, Count };
 
 			/** The window's rows (full screen, its size) are not there where the game has no window of its own: the rows after them move up. */
 			int32 Hidden(const FDisplayModes& Modes)
@@ -313,6 +313,10 @@ namespace Weltall
 				return Shown(Text::Display::Gears, ChoiceName(Settings.Field.GearModels, Text::Display::GearsValues));
 			case Display::ChapterCards:
 				return Shown(Text::Display::ChapterCards, OnOff(Settings.bChapterCards));
+			case Display::MessageBoxScale:
+				return Shown(Text::Display::MessageBoxScale, ChoiceName(Settings.Field.MessageBoxScale, Text::Display::MessageBoxScaleValues));
+			case Display::MessageBoxBackground:
+				return Shown(Text::Display::MessageBoxBackground, ChoiceName(Settings.Field.MessageBoxBackground, Text::Display::MessageBoxBackgroundValues));
 			case Display::TextSpeed:
 				return Shown(Text::Display::TextSpeed, ChoiceName(Settings.TextSpeed, Text::Display::TextSpeedValues));
 			case Display::AutoAdvance:
@@ -524,6 +528,10 @@ namespace Weltall
 			case Display::ChapterCards:
 				Settings.bChapterCards = !Settings.bChapterCards;
 				return true;
+			case Display::MessageBoxScale:
+				return StepChoice(Settings.Field.MessageBoxScale, Direction, 3);
+			case Display::MessageBoxBackground:
+				return StepChoice(Settings.Field.MessageBoxBackground, Direction, 2);
 			case Display::TextSpeed:
 				return StepChoice(Settings.TextSpeed, Direction, 4);
 			case Display::AutoAdvance:
