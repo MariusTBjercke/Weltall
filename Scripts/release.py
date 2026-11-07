@@ -3,6 +3,7 @@
     python Scripts/release.py 0.8.0                      # the three Shipping packages, their files, a draft release
     python Scripts/release.py 0.8.0 --archives-only      # the files alone, to look at before drafting
     python Scripts/release.py 0.8.0 --platforms Windows  # one platform
+    python Scripts/release.py 1.0.1-fork.1 --platforms Windows --notes .agents/releases/1.0.1-fork.1.md  # a fork's own notes
 
 The release is built from HEAD, which must be clean, already pushed to GitHub (the draft points at it) and carry the
 version in Config/DefaultGame.ini's ProjectVersion. Each platform's Shipping package is built, run and archived by
@@ -28,7 +29,8 @@ RELEASES = REPO / "out" / "releases"
 PLATFORMS = ["Windows", "Linux", "Android"]
 # What players download for each platform: a zip of the package, but Android's APK, which installs as it is.
 PLAYERS_FILE = {"Android": ".apk"}
-VERSION = re.compile(r"\d+\.\d+\.\d+")
+# Three numbers, and a fork's suffix after them where it has one (1.0.1-fork.1).
+VERSION = re.compile(r"\d+\.\d+\.\d+(-[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?")
 PROJECT_VERSION = re.compile(r"^ProjectVersion=(.*)$", re.MULTILINE)
 
 NOTES = """\
@@ -161,9 +163,12 @@ def main():
     parser.add_argument("version", help="the release's version, as ProjectVersion has it (0.8.0)")
     parser.add_argument("--platforms", nargs="+", default=PLATFORMS, choices=PLATFORMS, help="the platforms to release (default: all three)")
     parser.add_argument("--archives-only", action="store_true", help="write the players' files and the notes, but tag and draft nothing")
+    parser.add_argument("--notes", type=Path, help="a Markdown file of the release's notes, in place of the ones written here ({version} is filled in)")
     args = parser.parse_args()
     if not VERSION.fullmatch(args.version):
-        parser.error(f"a version is three numbers, as 0.8.0: not {args.version}")
+        parser.error(f"a version is three numbers, as 0.8.0, or with a suffix, as 1.0.1-fork.1: not {args.version}")
+    if args.notes is not None and not args.notes.is_file():
+        parser.error(f"no notes at {args.notes}")
 
     check_source(args.version)
     commit = git("rev-parse", "HEAD")
@@ -180,7 +185,8 @@ def main():
         players.append(named)
         print(f"release: {named.relative_to(REPO)}")
     notes = RELEASES / f"Weltall-{args.version}-notes.md"
-    notes.write_text(unwrapped(NOTES.format(version=args.version)), encoding="utf-8")
+    text = args.notes.read_text(encoding="utf-8") if args.notes is not None else NOTES
+    notes.write_text(unwrapped(text.replace("{version}", args.version) if args.notes is not None else text.format(version=args.version)), encoding="utf-8")
     print(f"release: {notes.relative_to(REPO)}")
     if args.archives_only:
         return 0
