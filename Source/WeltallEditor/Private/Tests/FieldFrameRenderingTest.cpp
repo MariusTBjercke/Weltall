@@ -640,6 +640,36 @@ bool FFieldSeeThroughModelsRenderingTest::RunTest(const FString&)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFieldSeeThroughCoverageRenderingTest, "Weltall.Rendering.FieldSeeThroughNotWhatHidesTooLittle",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FFieldSeeThroughCoverageRenderingTest::RunTest(const FString&)
+{
+	const Weltall::FVram Vram = MakeVram();
+	FVramTexture Units;
+	BeginInitResource(&Units);
+	Units.Follow(Vram);
+
+	// A party member's sprite 2000 units away over the screen's (152, 96)-(168, 128), and a green bench 1000 units away
+	// before its feet, over only the lowest of the points the eye looks for.
+	const auto Render = [&Units](Weltall::EFieldSeeThrough SeeThrough)
+	{
+		FTestFrame Test;
+		Test.Sprite(152, 96, 2000);
+		Test.Frame.Characters.back().bSeenThrough = true;
+		Test.Quad(150, 120, 170, 132, FlatQuad, {0, 200, 0});
+		Test.Evaluate();
+		return Test.Render(Units, nullptr, 1.0f, EFieldSorting::DepthBufferWithScenery, SeeThrough);
+	};
+	const auto At = [](const TArray<FColor>& Pixels, int32 X, int32 Y) { return Pixels[Y * ScreenWidth + X]; };
+	const TArray<FColor> Hidden = Render(Weltall::EFieldSeeThrough::Off);
+	const TArray<FColor> Seen = Render(Weltall::EFieldSeeThrough::Normal);
+	TestEqual(TEXT("a bench hiding only the feet is not seen through"), At(Seen, 157, 124), At(Hidden, 157, 124));
+	BeginReleaseResource(&Units);
+	FlushRenderingCommands();
+	return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFieldShadowOrderRenderingTest, "Weltall.Rendering.FieldShadowsStayOnGroundDrawnAfterThem",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 

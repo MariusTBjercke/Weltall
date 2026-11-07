@@ -76,14 +76,24 @@ TEST_CASE("The scenery is seen through in a round bubble about the sprite, in fr
 	CHECK(SeeThroughShare(Hole, {0.0f, 4.0f, 500.0f}, {}) == 0.0f);
 }
 
-TEST_CASE("The eye looks for a sprite up its middle and to its sides", "[Field]")
+TEST_CASE("The eye looks for a sprite at five heights, at its middle and to its sides", "[Field]")
 {
 	const auto Samples = SeeThroughSamples(StandingSprite());
-	CHECK(Samples[0] == std::array<float, 3>{0.0f, -8.0f, 1000.0f});
-	CHECK(Samples[1][1] == Catch::Approx(-17.6f));
-	CHECK(Samples[2][1] == Catch::Approx(-27.2f));
-	CHECK(Samples[3][0] == Catch::Approx(-4.8f));
-	CHECK(Samples[4][0] == Catch::Approx(4.8f));
+	// Row after row from the feet up, left, middle and right in each.
+	CHECK(Samples[0][0] == Catch::Approx(-4.8f));
+	CHECK(Samples[0][1] == Catch::Approx(-4.8f));
+	CHECK(Samples[1] == std::array<float, 3>{0.0f, Samples[0][1], 1000.0f});
+	CHECK(Samples[2][0] == Catch::Approx(4.8f));
+	CHECK(Samples[14][1] == Catch::Approx(-30.4f));
+}
+
+TEST_CASE("Enough of a sprite must be hidden before it is seen through", "[Field]")
+{
+	// Its feet and shins (the two lowest rows) are not enough; a whole side of it, or most of its height, is.
+	CHECK_FALSE(SeeThroughCoversEnough(0b000000000111111u));
+	CHECK(SeeThroughCoversEnough(0b001001001001001u | 0b010010010010010u));
+	CHECK(SeeThroughCoversEnough(0b000111111111111u));
+	CHECK_FALSE(SeeThroughCoversEnough(0u));
 }
 
 TEST_CASE("Only what stands between the eye and a point hides it", "[Field]")

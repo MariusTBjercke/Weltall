@@ -3,6 +3,7 @@
 #include "Field/EventContext.h"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 
 namespace Weltall
@@ -70,7 +71,23 @@ namespace Weltall
 			Point[0] += Side * Hole.HalfWidth;
 			return Point;
 		};
-		return {Along(0.25f, 0.0f), Along(0.55f, 0.0f), Along(0.85f, 0.0f), Along(0.55f, -0.6f), Along(0.55f, 0.6f)};
+		std::array<std::array<float, 3>, FieldSeeThroughSamples> Samples{};
+		constexpr std::array<float, 5> Heights{0.15f, 0.35f, 0.55f, 0.75f, 0.95f};
+		constexpr std::array<float, 3> Sides{-0.6f, 0.0f, 0.6f};
+		for (std::size_t Row = 0; Row < Heights.size(); ++Row)
+		{
+			for (std::size_t Column = 0; Column < Sides.size(); ++Column)
+			{
+				Samples[Row * Sides.size() + Column] = Along(Heights[Row], Sides[Column]);
+			}
+		}
+		return Samples;
+	}
+
+	bool SeeThroughCoversEnough(uint32 Hidden)
+	{
+		constexpr uint32 All = (1u << FieldSeeThroughSamples) - 1;
+		return static_cast<float>(std::popcount(Hidden & All)) >= FieldSeeThrough::Coverage * static_cast<float>(FieldSeeThroughSamples);
 	}
 
 	namespace
