@@ -166,11 +166,21 @@ namespace
 				[Character](const Weltall::FFieldCharacterQuad& Quad) { return Quad.Character == Character; });
 			Empty += bAny ? 0 : 1;
 		}
+		// The characters that survived the ordering table: what the frame actually draws, which is where a sprite was lost.
+		std::vector<uint32> Ordered(Now.Characters.size(), 0);
+		for (const Weltall::FFieldDrawItem& Item : Now.Order)
+		{
+			if (Item.Kind == Weltall::EFieldDrawKind::Character && Item.Index < Ordered.size())
+			{
+				Ordered[Item.Index] = 1;
+			}
+		}
+		const int32 DrawnCharacters = static_cast<int32>(std::count(Ordered.begin(), Ordered.end(), 1));
 		UE_LOG(LogWeltall, Log,
-			TEXT("Field drops: zoom %.3f tick %u | scenery %d of %d (model %d screen %d back %d zero %d far %d) | gears %d of %d (model %d screen %d back %d zero %d far %d) | characters %d quads %d with none %d"),
+			TEXT("Field drops: zoom %.3f tick %u | scenery %d of %d (model %d screen %d back %d zero %d far %d) | gears %d of %d (model %d screen %d back %d zero %d far %d) | characters %d quads %d with none %d ordered %d"),
 			Now.ShownOffsets.Zoom, Now.Tick, SceneryDrawn, static_cast<int32>(Now.Scenery.Polygons.size()), Scenery[0], Scenery[1], Scenery[2],
 			Scenery[3], Scenery[4], GearsDrawn, static_cast<int32>(Now.Gears.Polygons.size()), Gears[0], Gears[1], Gears[2], Gears[3], Gears[4],
-			static_cast<int32>(Now.Characters.size()), static_cast<int32>(Now.Quads.size()), Empty);
+			static_cast<int32>(Now.Characters.size()), static_cast<int32>(Now.Quads.size()), Empty, DrawnCharacters);
 	}
 }
 

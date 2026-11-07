@@ -220,7 +220,7 @@ namespace Weltall
 		SpriteModelCapture.push_back({*Part, Draw.Matrix, Draw.bFogged, Draw.Key});
 	}
 
-	void FFieldPresenter::OrderFrame(FFieldFrame& Frame)
+	void FFieldPresenter::OrderFrame(FFieldFrame& Frame, int32 FarBucketShift)
 	{
 		const FFieldScene& Scene = *MapScene;
 		const std::vector<uint32>& Scenery = Frame.Scenery.DrawOrder;
@@ -266,15 +266,20 @@ namespace Weltall
 				return EntryA != EntryB ? EntryA > EntryB : A > B;
 			});
 		};
-		const auto CharacterEntry = [&Frame](std::size_t Quad) { return Frame.Quads[Quad].Quad.OtIndex; };
-		const auto ParticleEntry = [&Frame](std::size_t Particle) { return Frame.Particles[Particle].OtIndex; };
+		// A sprite's, a particle's and a child model's entry is the game's, sorted by the game's camera: the player's own
+		// framing draws the picture's depths elsewhere, and the far bucket these are kept under has moved with them
+		// (FFieldPresentedView::FarBucket), so their entries move by as much. Nearer than the table's first entry they
+		// wait there, which draws them in front of it.
+		const auto Moved = [FarBucketShift](int32 Entry) { return Entry < 0 ? -1 : std::max(0, Entry + FarBucketShift); };
+		const auto CharacterEntry = [&Frame, &Moved](std::size_t Quad) { return Moved(Frame.Quads[Quad].Quad.OtIndex); };
+		const auto ParticleEntry = [&Frame, &Moved](std::size_t Particle) { return Moved(Frame.Particles[Particle].OtIndex); };
 		SortLinked(Sorted, Frame.Quads.size(), CharacterEntry);
 		SortLinked(SortedParticles, Frame.Particles.size(), ParticleEntry);
 		// The children's models link only what they draw.
 		const std::vector<FFieldSpriteModelPolygon>& ChildPolygons = Frame.SpriteModels.Polygons;
-		const auto ChildEntry = [&ChildPolygons](std::size_t Polygon)
+		const auto ChildEntry = [&ChildPolygons, &Moved](std::size_t Polygon)
 		{
-			return ChildPolygons[Polygon].bDrawn ? static_cast<int32>(ChildPolygons[Polygon].Bucket) : -1;
+			return ChildPolygons[Polygon].bDrawn ? Moved(static_cast<int32>(ChildPolygons[Polygon].Bucket)) : -1;
 		};
 		SortLinked(SpriteModelsSorted, ChildPolygons.size(), ChildEntry);
 		// The gears link only what they draw.

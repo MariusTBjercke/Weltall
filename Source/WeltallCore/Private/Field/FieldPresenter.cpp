@@ -436,7 +436,7 @@ namespace Weltall
 		{
 			return ParticleError;
 		}
-		OrderFrame(Frame);
+		OrderFrame(Frame, Shown.FarBucketShift);
 		WriteOverScreen();
 		Frame.ScreenInVram.assign(ScreenInVram.begin(), ScreenInVram.end());
 		DrawFieldCompass(Context.Render.Compass, DrawingTables.Compass, Shown.View.Rotation, Shown.View.Pitch, CompassFrame);
