@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated": "2026-11-07T10:55:00Z",
+  "updated": "2026-11-07T14:10:00Z",
   "items": [
     {
       "id": "01",
@@ -39,19 +39,44 @@
     {
       "id": "03",
       "title": "Make the message font readable on modern screens",
-      "status": "todo",
-      "owner": "",
+      "status": "blocked",
+      "owner": "agent",
       "files": [
         "Source/WeltallCore/Private/Field/FieldScreenLayer.cpp",
         "Source/WeltallCore/Public/Text/MesFont.h",
-        "Source/Weltall/Private/Shell/TextModFiles.cpp",
-        "Source/WeltallCore/Public/Menu/OptionsText.h"
+        "Source/Weltall/Private/Shell/TextModFiles.cpp"
       ],
       "verify": "the owner reads a message box in the game and says it is clearer, from D:\\Games\\Weltall",
       "blocked_by": [
-        "choosing a path: redraw the 12x11 glyphs (asset only), offer several sheets, or build a high-resolution text path"
+        "the picture is composed into a 4-bit VRAM sprite, so no font sheet can exceed 12x11: only a high-resolution text path would change it, and item 04 answers the complaint more cheaply"
       ],
       "evidence": ".agents/research/font-legibility.md"
+    },
+    {
+      "id": "04",
+      "title": "Message boxes: whole-pixel letters and a background that hides the scene",
+      "status": "in_progress",
+      "owner": "agent",
+      "files": [
+        "Source/WeltallCore/Public/Field/FieldRenderOptions.h",
+        "Source/WeltallCore/Public/Field/FieldFrame.h",
+        "Source/WeltallCore/Public/Field/FieldScreenLayer.h",
+        "Source/WeltallCore/Private/Field/FieldScreenLayer.cpp",
+        "Source/WeltallCore/Public/Field/FieldPresenter.h",
+        "Source/WeltallCore/Private/Field/FieldPresenter.cpp",
+        "Source/WeltallCore/Private/Field/FieldFrameScreen.cpp",
+        "Source/WeltallCore/Private/Game/FieldProgram.cpp",
+        "Source/WeltallCore/Public/Menu/OptionsText.h",
+        "Source/WeltallCore/Private/Menu/MenuSettingsPages.cpp",
+        "Source/WeltallCore/Private/Game/PlayerSettings.cpp",
+        "Source/Weltall/Private/Screens/FieldScreenFrame.cpp",
+        "Source/Weltall/Private/Screens/FieldScreenFrame.h",
+        "Source/Weltall/Private/Screens/FieldView.cpp",
+        "Tests/WeltallCore/Menu/MenuSettingsPagesTests.cpp"
+      ],
+      "verify": "the owner plays a dialogue scene from D:\\Games\\Weltall with Options, Display, Text box size at Whole pixels or Smaller, and Text box shading at Solid",
+      "blocked_by": [],
+      "evidence": ".agents/validation/m01-message-boxes.md"
     }
   ]
 }
