@@ -185,7 +185,10 @@ def build(configuration, platform, ue_root):
         commands += android.commands(ubt, uat, project, configuration, staging / platform.name)
     else:
         commands.append([ubt, "Weltall", platform.target, configuration, f"-Project={project}", "-WaitMutex"])
-        if platform.name == "Windows":
+        # A source build compiles the bootstrapper that becomes the package's top-level executable; an installed engine
+        # (the launcher's) ships it as Engine/Binaries/Win64/BootstrapPackagedGame-Win64-Shipping.exe and only the
+        # compiled binary, so there is nothing to build there.
+        if platform.name == "Windows" and (engine.parent / "Source" / "Programs" / "BootstrapPackagedGame").is_dir():
             commands.append([ubt, "BootstrapPackagedGame", "Win64", "Shipping", "-WaitMutex"])
         commands.append([uat, "-WaitForUATMutex", "BuildCookRun", f"-project={project}", f"-platform={platform.target}",
                          f"-clientconfig={configuration}", "-skipbuild", "-cook", "-stage", "-pak", "-package", "-archive",
