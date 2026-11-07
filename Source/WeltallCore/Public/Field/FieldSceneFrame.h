@@ -114,6 +114,11 @@ namespace Weltall
 		 * plane it pulls back through).
 		 */
 		bool bInRange = false;
+		/**
+		 * As bInRange without its facing: what the field draws under a view of any width, leaving the facing to the
+		 * drawing, which tests it in every frame against the view it draws with (a free camera turns between ticks).
+		 */
+		bool bInRangeAnyFacing = false;
 	};
 
 	/** The kernel's shift from a depth to its ordering-table entry, as the field keeps it. */

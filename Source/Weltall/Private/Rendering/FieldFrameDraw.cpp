@@ -87,6 +87,11 @@ namespace
 				Draw.Objects[First + Row] = FVector4f(Moved.M[0][Row], Moved.M[1][Row], Moved.M[2][Row], Moved.M[3][Row]);
 			}
 		}
+		// The world's up turns with the view: the shadows and the see-through holes test against it where things are drawn.
+		if (!Draw.FloorUp.IsZero())
+		{
+			Draw.FloorUp = FVector3f(Move.TransformVector(Draw.FloorUp)).GetSafeNormal();
+		}
 	}
 
 	/** What takes a frame's view space to its unrounded view's, where the frame knows it and the two are one view. */

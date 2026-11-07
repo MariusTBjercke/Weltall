@@ -145,7 +145,7 @@ namespace Weltall
 				{
 					Polygon.Dropped |= FieldPolygonDrop::BeyondFarBucket;
 				}
-				Polygon.bDrawn = Culling == EFieldCulling::Original ? Polygon.Dropped == 0 : !bBeyond && Test.bInRange;
+				Polygon.bDrawn = Culling == EFieldCulling::Original ? Polygon.Dropped == 0 : !bBeyond && Test.bInRangeAnyFacing;
 				Polygon.bFogged = Draw.bFogged && IsFogCuedKind(Primitive.Type);
 				if (Polygon.bFogged)
 				{

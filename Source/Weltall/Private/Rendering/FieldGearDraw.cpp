@@ -118,6 +118,8 @@ void FFieldSceneMesh::AddGears(std::span<const Weltall::FFieldGearLayoutItem> Ge
 				State.Flags = (Code & GearRawCode) != 0 ? FieldPolygonFlags::Raw : 0;
 				SetGearTexels(State, std::span<const Weltall::FMdlUv>(Primitive.Uvs).first(Traits.Corners));
 			}
+			// What faces away is left out as each frame is drawn (FFieldPolygonTest::bInRangeAnyFacing).
+			State.Flags |= FieldPolygonFlags::OneSided;
 			GearBlends.Add(GearBlendOf(Code, Traits.bTextured, Texture.TexturePage));
 		}
 	}

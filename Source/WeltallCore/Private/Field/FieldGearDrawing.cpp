@@ -208,7 +208,7 @@ namespace Weltall
 				const bool bBeyond = Test.Bucket > Drawing.FarBucket;
 				Polygon.Bucket = Test.Bucket;
 				Polygon.Dropped = static_cast<uint8>(Test.Dropped | (bBeyond ? FieldPolygonDrop::BeyondFarBucket : 0));
-				Polygon.bDrawn = Drawing.Culling == EFieldCulling::Original ? Polygon.Dropped == 0 : !bBeyond && Test.bInRange;
+				Polygon.bDrawn = Drawing.Culling == EFieldCulling::Original ? Polygon.Dropped == 0 : !bBeyond && Test.bInRangeAnyFacing;
 				Polygon.Colors = Packet.Colors;
 				if (Packet.Relight != EMdlRelight::None)
 				{

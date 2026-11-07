@@ -352,9 +352,8 @@ namespace
 			const auto Dot = [&Point](const FVector4f& Rows) { return Rows.X * Point[0] + Rows.Y * Point[1] + Rows.Z * Point[2] + Rows.W; };
 			return FVector3f(Dot(Draw.Objects[Row]), Dot(Draw.Objects[Row + 1]), Dot(Draw.Objects[Row + 2]));
 		};
-		// The world's up was taken under the game's view: turned as the identity's rows turn the holes.
-		const FVector3f Up = Draw.FloorUp;
-		Shapes.Up = FVector3f(FVector3f(Draw.Objects[Row]) | Up, FVector3f(Draw.Objects[Row + 1]) | Up, FVector3f(Draw.Objects[Row + 2]) | Up).GetSafeNormal();
+		// The world's up, turned with the view as the rows are (MoveFieldSceneView).
+		Shapes.Up = Draw.FloorUp;
 		for (const Weltall::FFieldSeeThroughHole& Hole : Draw.SeeThroughHoles)
 		{
 			Shapes.Feet[Shapes.Count] = FVector4f(Place(Hole.Feet), Hole.HalfWidth);

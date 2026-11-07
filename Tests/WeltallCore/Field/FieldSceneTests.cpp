@@ -110,10 +110,12 @@ TEST_CASE("The field's scene frame keeps the original's rules for each polygon",
 	CHECK(Stretched.ScreenY[0] == 112);
 	CHECK(Frame.DrawOrder == std::vector<uint32>{Facing, Near});
 
-	// Everything in range for a wider view: the one facing away, the one too far and the one across the screen stay out.
+	// Everything in range for a wider view: the one too far and the one across the screen stay out. The one facing away
+	// stays in, for the drawing tests its facing in every frame against the view it draws with (a free camera turns
+	// between ticks).
 	const FFieldSceneFrame Wide = Test.Evaluate(EFieldCulling::InRange);
-	CHECK(Wide.DrawOrder.size() == 4);
-	CHECK_FALSE(Wide.Polygons[Away].bDrawn);
+	CHECK(Wide.DrawOrder.size() == 5);
+	CHECK(Wide.Polygons[Away].bDrawn);
 	CHECK_FALSE(Wide.Polygons[Far].bDrawn);
 	CHECK(Wide.Polygons[Right].bDrawn);
 	CHECK(Wide.Polygons[Near].bDrawn);

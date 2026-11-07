@@ -188,8 +188,8 @@ namespace Weltall
 			bZeroDepth = false;
 		}
 		Test.Dropped = static_cast<uint8>(OriginalDrops(Corners, ClipRows, ClipColumns) | (bZeroDepth ? FieldPolygonDrop::ZeroDepth : 0));
-		Test.bInRange = WindsClockwiseFromEye(*Corners.At[0], *Corners.At[1], *Corners.At[2])
-			&& ((Test.Dropped & FieldPolygonDrop::OffScreen) == 0 || IsBeyondAnEdge(Corners, ClipRows, ClipColumns));
+		Test.bInRangeAnyFacing = (Test.Dropped & FieldPolygonDrop::OffScreen) == 0 || IsBeyondAnEdge(Corners, ClipRows, ClipColumns);
+		Test.bInRange = WindsClockwiseFromEye(*Corners.At[0], *Corners.At[1], *Corners.At[2]) && Test.bInRangeAnyFacing;
 		return Test;
 	}
 
@@ -334,7 +334,7 @@ namespace Weltall
 				{
 					Polygon.Dropped |= FieldPolygonDrop::BeyondFarBucket;
 				}
-				Polygon.bDrawn = Culling == EFieldCulling::Original ? Polygon.Dropped == 0 : !Object.bHidden && !bBeyond && Test.bInRange;
+				Polygon.bDrawn = Culling == EFieldCulling::Original ? Polygon.Dropped == 0 : !Object.bHidden && !bBeyond && Test.bInRangeAnyFacing;
 				Polygon.Colors = Source.Packet.Colors;
 				Polygon.bFogged = bFogged;
 				if (bFogged)

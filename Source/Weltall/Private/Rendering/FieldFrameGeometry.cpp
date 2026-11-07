@@ -158,6 +158,8 @@ namespace
 			State.TexelMin = LowU | LowV << 8;
 			State.TexelMax = HighU | HighV << 8;
 		}
+		// A copy of the mesh's polygon: its flags as the mesh has them.
+		State.Flags |= Mesh.States()[static_cast<int32>(Index)].Flags & (FieldPolygonFlags::OneSided | FieldPolygonFlags::SeeThrough);
 		const FUintVector4 Colors = Draw.Colors[static_cast<int32>(Index)];
 		Draw.Colors.Add(Colors);
 	}

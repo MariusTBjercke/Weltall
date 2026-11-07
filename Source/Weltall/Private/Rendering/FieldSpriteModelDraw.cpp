@@ -83,6 +83,8 @@ void AddFieldSpriteModels(const Weltall::FFieldFrame& Latest, const Weltall::FFi
 			State.TexelMin = LowU | LowV << 8;
 			State.TexelMax = HighU | HighV << 8;
 		}
+		// What faces away is left out as each frame is drawn (FFieldPolygonTest::bInRangeAnyFacing).
+		State.Flags |= FieldPolygonFlags::OneSided;
 		const uint32 Flags = Polygon.bFogged ? FieldColorFlags::Modulated : 0;
 		Draw.Colors.Emplace(PackSpriteModelColor(Polygon.Colors[0]) | Flags, PackSpriteModelColor(Polygon.Colors[1]), PackSpriteModelColor(Polygon.Colors[2]),
 			PackSpriteModelColor(Polygon.Colors[3]));

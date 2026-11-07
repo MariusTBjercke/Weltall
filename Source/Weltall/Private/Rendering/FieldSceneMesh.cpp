@@ -119,6 +119,8 @@ void FFieldSceneMesh::AddScenery(const Weltall::FFieldScene& Scene)
 			State.TexelMin = PackTexel(LowU, LowV);
 			State.TexelMax = PackTexel(HighU, HighV);
 		}
+		// The field leaves out what faces away as it draws each frame (FFieldPolygonTest::bInRangeAnyFacing).
+		State.Flags |= FieldPolygonFlags::OneSided;
 		const Weltall::FFieldSceneObject& Owner = Scene.Objects[Polygon.Object];
 		if (!Owner.bBackground && !Owner.bPicture)
 		{
