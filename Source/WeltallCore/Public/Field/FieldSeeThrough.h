@@ -42,11 +42,6 @@ namespace Weltall
 		/** How far above the sprite's floor, as shares of its height, the scenery starts to be taken away, and over how much more it fades in. */
 		inline constexpr float FloorMargin = 0.05f;
 		inline constexpr float FloorFade = 0.15f;
-		/**
-		 * The share of a sprite's points the scenery must hide before it is seen through: a bench before its feet does
-		 * not, a pillar over half of it does.
-		 */
-		inline constexpr float Coverage = 0.45f;
 		/** How long (seconds) a model must hide the party before it starts to be seen through: a jump past a ledge never does. */
 		inline constexpr float Delay = 0.2f;
 		/** How long it takes to be seen through all the way, and to come back. */
@@ -101,18 +96,15 @@ namespace Weltall
 	/** The hole about a sprite whose quads' corners in view space are Corners: none (zero width) for no corners. */
 	WELTALLCORE_API FFieldSeeThroughHole SeeThroughHoleOf(std::span<const std::array<float, 3>> Corners);
 
-	/** How many points of a sprite the eye looks for (SeeThroughSamples): five heights, three across. */
-	inline constexpr std::size_t FieldSeeThroughSamples = 15;
+	/** How many points of a sprite the eye looks for (SeeThroughSamples). */
+	inline constexpr std::size_t FieldSeeThroughSamples = 5;
 
 	/**
-	 * The points of a hole's sprite the eye looks for, in view space: at five heights from near its feet to near its head,
-	 * each at its middle and to either side, row after row from the feet up. What stands between the eye and enough of
-	 * them (SeeThroughCoversEnough) hides the sprite, and only that is seen through.
+	 * The points of a hole's sprite the eye looks for, in view space: up its middle from near its feet to near its head,
+	 * and to either side of its middle. A placed model of the scenery that stands between the eye and one of them hides
+	 * the sprite, and only such a model is seen through.
 	 */
 	WELTALLCORE_API std::array<std::array<float, 3>, FieldSeeThroughSamples> SeeThroughSamples(const FFieldSeeThroughHole& Hole);
-
-	/** Whether the points of a sprite hidden (a bit each, SeeThroughSamples' order) are enough of it to see through. */
-	WELTALLCORE_API bool SeeThroughCoversEnough(uint32 Hidden);
 
 	/**
 	 * Whether the triangle A B C (view space, either side facing the eye) stands between the eye, at the origin, and

@@ -301,29 +301,12 @@ void MarkFieldSeeThroughModels(const Weltall::FFieldScene& Scene, const Weltall:
 		return;
 	}
 	// The points of the party the eye looks for.
-	// The points of each member the eye looks for, and where they lie on the screen and how far at most: a triangle wholly
-	// beyond them, or beside them on the screen, hides none of them.
-	struct FReach
-	{
-		std::array<std::array<float, 3>, Weltall::FieldSeeThroughSamples> Samples;
-		float Left = 0.0f, Right = 0.0f, Top = 0.0f, Bottom = 0.0f, Far = 0.0f;
-	};
-	const int32 Holes = Draw.SeeThroughHoles.Num();
-	TArray<FReach, TInlineAllocator<Weltall::FieldSeeThroughHoles>> Reaches;
+	TArray<std::array<float, 3>, TInlineAllocator<Weltall::FieldSeeThroughHoles * Weltall::FieldSeeThroughSamples>> Samples;
 	for (const Weltall::FFieldSeeThroughHole& Hole : Draw.SeeThroughHoles)
 	{
-		FReach& Reach = Reaches.AddDefaulted_GetRef();
-		Reach.Samples = Weltall::SeeThroughSamples(Hole);
-		Reach.Left = Reach.Top = TNumericLimits<float>::Max();
-		Reach.Right = Reach.Bottom = TNumericLimits<float>::Lowest();
-		for (const std::array<float, 3>& Sample : Reach.Samples)
+		for (const std::array<float, 3>& Sample : Weltall::SeeThroughSamples(Hole))
 		{
-			const float Depth = FMath::Max(Sample[2], 1.0f);
-			Reach.Left = FMath::Min(Reach.Left, Sample[0] / Depth);
-			Reach.Right = FMath::Max(Reach.Right, Sample[0] / Depth);
-			Reach.Top = FMath::Min(Reach.Top, Sample[1] / Depth);
-			Reach.Bottom = FMath::Max(Reach.Bottom, Sample[1] / Depth);
-			Reach.Far = FMath::Max(Reach.Far, Sample[2]);
+			Samples.Add(Sample);
 		}
 	}
 	const std::array<float, 3> Up{Draw.FloorUp.X, Draw.FloorUp.Y, Draw.FloorUp.Z};
@@ -339,12 +322,10 @@ void MarkFieldSeeThroughModels(const Weltall::FFieldScene& Scene, const Weltall:
 		const auto Dot = [&Point](const FVector4f& Rows) { return Rows.X * Point.X + Rows.Y * Point.Y + Rows.Z * Point.Z + Rows.W; };
 		return std::array<float, 3>{Dot(Draw.Objects[Row]), Dot(Draw.Objects[Row + 1]), Dot(Draw.Objects[Row + 2])};
 	};
-	// Per placed model: drawn with polygons that may be seen through, bearing one of the party, and the points of each
-	// member it stands between the eye and (a bit each, by member).
+	// Per placed model: drawn with polygons that may be seen through, standing between the eye and the party, bearing one of them.
 	TBitArray<> Seeable(false, Objects);
+	TBitArray<> Hit(false, Objects);
 	TBitArray<> Bearing(false, Objects);
-	TArray<uint32> Covered;
-	Covered.SetNumZeroed(Objects * Holes);
 	const uint32 SceneryPolygons = FMath::Min<uint32>(static_cast<uint32>(Scene.Polygons.size()), Mesh.FirstGearPolygon());
 	for (uint32 Polygon = 0; Polygon < SceneryPolygons && Polygon < Latest.Scenery.Polygons.size(); ++Polygon)
 	{
@@ -354,6 +335,10 @@ void MarkFieldSeeThroughModels(const Weltall::FFieldScene& Scene, const Weltall:
 			continue;
 		}
 		Seeable[Object] = true;
+		if (Hit[Object] && (Bearing[Object] || !bUp))
+		{
+			continue;
+		}
 		const bool bRedirected = Draw.Redirects.IsValidIndex(static_cast<int32>(Polygon)) && Draw.Redirects[Polygon] != FFieldSceneDraw::NoRedirect;
 		const uint32 First = bRedirected ? Draw.Redirects[Polygon] : Mesh.FirstCorner(Polygon);
 		const uint32 Count = Mesh.CornerCount(Polygon);
@@ -367,33 +352,9 @@ void MarkFieldSeeThroughModels(const Weltall::FFieldScene& Scene, const Weltall:
 			const std::array<float, 3> A = ViewAt(Triangle);
 			const std::array<float, 3> B = ViewAt(Triangle + 1);
 			const std::array<float, 3> C = ViewAt(Triangle + 2);
-			const bool bProjects = A[2] > 1.0f && B[2] > 1.0f && C[2] > 1.0f;
-			for (int32 Hole = 0; Hole < Holes; ++Hole)
+			for (int32 Sample = 0; Sample < Samples.Num() && !Hit[Object]; ++Sample)
 			{
-				const FReach& Reach = Reaches[Hole];
-				if (A[2] >= Reach.Far && B[2] >= Reach.Far && C[2] >= Reach.Far)
-				{
-					continue;
-				}
-				if (bProjects)
-				{
-					const float Left = FMath::Min3(A[0] / A[2], B[0] / B[2], C[0] / C[2]);
-					const float Right = FMath::Max3(A[0] / A[2], B[0] / B[2], C[0] / C[2]);
-					const float Top = FMath::Min3(A[1] / A[2], B[1] / B[2], C[1] / C[2]);
-					const float Bottom = FMath::Max3(A[1] / A[2], B[1] / B[2], C[1] / C[2]);
-					if (Right < Reach.Left || Left > Reach.Right || Bottom < Reach.Top || Top > Reach.Bottom)
-					{
-						continue;
-					}
-				}
-				uint32& Mask = Covered[Object * Holes + Hole];
-				for (uint32 Sample = 0; Sample < Weltall::FieldSeeThroughSamples; ++Sample)
-				{
-					if ((Mask & 1u << Sample) == 0 && Weltall::HidesFromEye(Reach.Samples[Sample], A, B, C))
-					{
-						Mask |= 1u << Sample;
-					}
-				}
+				Hit[Object] = Weltall::HidesFromEye(Samples[Sample], A, B, C);
 			}
 			for (int32 Hole = 0; bUp && Hole < Draw.SeeThroughHoles.Num() && !Bearing[Object]; ++Hole)
 			{
@@ -403,26 +364,12 @@ void MarkFieldSeeThroughModels(const Weltall::FFieldScene& Scene, const Weltall:
 	}
 	// What a member stands on is never seen through; what hides one is, and so are the models it touches that stand above
 	// that member's feet and in front of it, so a bridge or a wall made of several is seen through as one.
-	// A member is hidden when the models before it, together, hide enough of it (a structure of several counts as one);
-	// then each of them that hides some of it is seen through.
-	TArray<uint32, TInlineAllocator<Weltall::FieldSeeThroughHoles>> Together;
-	Together.SetNumZeroed(Holes);
-	for (int32 Object = 0; Object < Objects; ++Object)
-	{
-		for (int32 Hole = 0; Hole < Holes && !Bearing[Object]; ++Hole)
-		{
-			Together[Hole] |= Covered[Object * Holes + Hole];
-		}
-	}
 	TBitArray<> Hiding(false, Objects);
 	TArray<FVector4f> Spheres;
 	Spheres.SetNumZeroed(Objects);
 	for (int32 Object = 0; Object < Objects; ++Object)
 	{
-		for (int32 Hole = 0; Hole < Holes && !Bearing[Object]; ++Hole)
-		{
-			Hiding[Object] = Hiding[Object] || (Covered[Object * Holes + Hole] != 0 && Weltall::SeeThroughCoversEnough(Together[Hole]));
-		}
+		Hiding[Object] = Hit[Object] && !Bearing[Object];
 		const Weltall::FFieldModelBounds& Bounds = Scene.Objects[static_cast<std::size_t>(Object)].Bounds;
 		const std::array<float, 3> Centre = Place(static_cast<uint32>(Object), FVector3f(Bounds.Centre[0], Bounds.Centre[1], Bounds.Centre[2]));
 		const int32 Row = Object * 3;
