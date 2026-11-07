@@ -38,10 +38,10 @@
 #define SEE_THROUGH_HOLES 6
 #define SEE_THROUGH_DEPTH_MARGIN 32.0
 #define SEE_THROUGH_DEPTH_FADE 64.0
-#define SEE_THROUGH_WIDEN 1.75
+#define SEE_THROUGH_WIDEN 1.5
 #define SEE_THROUGH_EDGE 0.35
-#define SEE_THROUGH_FEET_FADE 0.1
-#define SEE_THROUGH_HEAD_ROOM 0.15
+#define SEE_THROUGH_FLOOR_MARGIN 0.05
+#define SEE_THROUGH_FLOOR_FADE 0.15
 
 // In the top byte of a polygon's first colour: this frame modulates its texels even when its packet draws them raw.
 #define COLOR_MODULATED (1u << 24)
@@ -127,6 +127,8 @@ uint SampleCount;
 float4 SeeThroughFeet[SEE_THROUGH_HOLES];
 float4 SeeThroughHead[SEE_THROUGH_HOLES];
 uint SeeThroughCount;
+// The world's up in the view the holes are placed in (zero: unknown, and what lies below a sprite's feet is kept).
+float3 SeeThroughUp;
 
 // Multisampling's four samples at their standard places, in sixteenths of a pixel from its centre (Direct3D's, which
 // Vulkan's standard places are).
@@ -357,15 +359,18 @@ float SeeThroughShare(float4 Feet, float4 Head, float3 View)
 		return 0.0;
 	}
 	const float InFront = saturate((min(Feet.z, Head.z) - View.z - SEE_THROUGH_DEPTH_MARGIN) / SEE_THROUGH_DEPTH_FADE);
+	// Above the floor the sprite stands on, by the world's up; without it, above its feet on the screen.
+	const float Height = length(Head.xyz - Feet.xyz);
+	const float Above = any(SeeThroughUp != 0.0) ? dot(View - Feet.xyz, SeeThroughUp) : (Feet.y / Feet.z - View.y / View.z) * Feet.z;
+	const float AboveFloor = saturate((Above - SEE_THROUGH_FLOOR_MARGIN * Height) / max(SEE_THROUGH_FLOOR_FADE * Height, 1e-4));
+	// On the screen, as x / z and y / z: a round bubble about the sprite's middle.
 	const float2 Point = View.xy / View.z;
 	const float2 AtFeet = Feet.xy / Feet.z;
-	const float2 Up = Head.xy / Head.z - AtFeet;
-	const float Along = dot(Point - AtFeet, Up) / max(dot(Up, Up), 1e-8);
-	const float AboveFeet = saturate(Along / SEE_THROUGH_FEET_FADE);
-	const float2 Nearest = AtFeet + Up * clamp(Along, 0.0, 1.0 + SEE_THROUGH_HEAD_ROOM);
-	const float Radius = Feet.w * SEE_THROUGH_WIDEN / Feet.z;
-	const float Inside = saturate((1.0 - length(Point - Nearest) / max(Radius, 1e-8)) / SEE_THROUGH_EDGE);
-	return InFront * AboveFeet * Inside;
+	const float2 AtHead = Head.xy / Head.z;
+	const float2 Middle = (AtFeet + AtHead) * 0.5;
+	const float Radius = max(length(AtHead - AtFeet) * 0.5, Feet.w / Feet.z) * SEE_THROUGH_WIDEN;
+	const float Inside = saturate((1.0 - length(Point - Middle) / max(Radius, 1e-8)) / SEE_THROUGH_EDGE);
+	return InFront * AboveFloor * Inside;
 }
 
 // A 4 x 4 ordered dither's threshold at a pixel: a share above it is taken away there.

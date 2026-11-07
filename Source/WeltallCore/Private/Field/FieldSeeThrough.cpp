@@ -58,7 +58,7 @@ namespace Weltall
 		return Hole;
 	}
 
-	float SeeThroughShare(const FFieldSeeThroughHole& Hole, const std::array<float, 3>& View)
+	float SeeThroughShare(const FFieldSeeThroughHole& Hole, const std::array<float, 3>& View, const std::array<float, 3>& Up)
 	{
 		using namespace FieldSeeThrough;
 		if (View[2] <= 1.0f || Hole.Feet[2] <= 1.0f || Hole.Head[2] <= 1.0f)
@@ -67,21 +67,33 @@ namespace Weltall
 		}
 		const float Nearest = std::min(Hole.Feet[2], Hole.Head[2]);
 		const float InFront = Saturate((Nearest - View[2] - DepthMargin) / DepthFade);
-		// On the screen, as x / z and y / z: the point, the feet, and the way up to the head.
+		// Above the floor the sprite stands on, by the world's up; without it, above its feet on the screen.
+		const float Height = std::sqrt((Hole.Head[0] - Hole.Feet[0]) * (Hole.Head[0] - Hole.Feet[0]) + (Hole.Head[1] - Hole.Feet[1]) * (Hole.Head[1] - Hole.Feet[1])
+			+ (Hole.Head[2] - Hole.Feet[2]) * (Hole.Head[2] - Hole.Feet[2]));
+		float Above = 0.0f;
+		if (Up[0] != 0.0f || Up[1] != 0.0f || Up[2] != 0.0f)
+		{
+			Above = (View[0] - Hole.Feet[0]) * Up[0] + (View[1] - Hole.Feet[1]) * Up[1] + (View[2] - Hole.Feet[2]) * Up[2];
+		}
+		else
+		{
+			// y runs down the screen: how far above the feet, at the feet's depth.
+			Above = (Hole.Feet[1] / Hole.Feet[2] - View[1] / View[2]) * Hole.Feet[2];
+		}
+		const float AboveFloor = Saturate((Above - FloorMargin * Height) / std::max(FloorFade * Height, 1e-4f));
+		// On the screen, as x / z and y / z: the point, and the bubble about the sprite's middle.
 		const float PointX = View[0] / View[2];
 		const float PointY = View[1] / View[2];
 		const float FeetX = Hole.Feet[0] / Hole.Feet[2];
 		const float FeetY = Hole.Feet[1] / Hole.Feet[2];
-		const float UpX = Hole.Head[0] / Hole.Head[2] - FeetX;
-		const float UpY = Hole.Head[1] / Hole.Head[2] - FeetY;
-		const float Along = ((PointX - FeetX) * UpX + (PointY - FeetY) * UpY) / std::max(UpX * UpX + UpY * UpY, 1e-8f);
-		const float AboveFeet = Saturate(Along / FeetFade);
-		const float Kept = std::clamp(Along, 0.0f, 1.0f + HeadRoom);
-		const float OffX = PointX - (FeetX + UpX * Kept);
-		const float OffY = PointY - (FeetY + UpY * Kept);
-		const float Radius = Hole.HalfWidth * Widen / Hole.Feet[2];
-		const float Across = std::sqrt(OffX * OffX + OffY * OffY) / std::max(Radius, 1e-8f);
+		const float HeadX = Hole.Head[0] / Hole.Head[2];
+		const float HeadY = Hole.Head[1] / Hole.Head[2];
+		const float MiddleX = (FeetX + HeadX) * 0.5f;
+		const float MiddleY = (FeetY + HeadY) * 0.5f;
+		const float HalfHeight = std::sqrt((HeadX - FeetX) * (HeadX - FeetX) + (HeadY - FeetY) * (HeadY - FeetY)) * 0.5f;
+		const float Radius = std::max(HalfHeight, Hole.HalfWidth / Hole.Feet[2]) * Widen;
+		const float Across = std::sqrt((PointX - MiddleX) * (PointX - MiddleX) + (PointY - MiddleY) * (PointY - MiddleY)) / std::max(Radius, 1e-8f);
 		const float Inside = Saturate((1.0f - Across) / Edge);
-		return InFront * AboveFeet * Inside;
+		return InFront * AboveFloor * Inside;
 	}
 }

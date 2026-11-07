@@ -333,6 +333,8 @@ namespace
 	{
 		FVector4f Feet[Weltall::FieldSeeThroughHoles];
 		FVector4f Head[Weltall::FieldSeeThroughHoles];
+		/** The world's up as the rows turn it. */
+		FVector3f Up = FVector3f::ZeroVector;
 		uint32 Count = 0;
 	};
 
@@ -350,6 +352,9 @@ namespace
 			const auto Dot = [&Point](const FVector4f& Rows) { return Rows.X * Point[0] + Rows.Y * Point[1] + Rows.Z * Point[2] + Rows.W; };
 			return FVector3f(Dot(Draw.Objects[Row]), Dot(Draw.Objects[Row + 1]), Dot(Draw.Objects[Row + 2]));
 		};
+		// The world's up was taken under the game's view: turned as the identity's rows turn the holes.
+		const FVector3f Up = Draw.FloorUp;
+		Shapes.Up = FVector3f(FVector3f(Draw.Objects[Row]) | Up, FVector3f(Draw.Objects[Row + 1]) | Up, FVector3f(Draw.Objects[Row + 2]) | Up).GetSafeNormal();
 		for (const Weltall::FFieldSeeThroughHole& Hole : Draw.SeeThroughHoles)
 		{
 			Shapes.Feet[Shapes.Count] = FVector4f(Place(Hole.Feet), Hole.HalfWidth);
@@ -492,6 +497,7 @@ namespace
 							PixelParameters.SeeThroughHead[Hole] = SeeThrough.Head[Hole];
 						}
 						PixelParameters.SeeThroughCount = SeeThrough.Count;
+						PixelParameters.SeeThroughUp = SeeThrough.Up;
 						SetShaderParameters(RHICmdList, PixelShader, PixelShader.GetPixelShader(), PixelParameters);
 						RHICmdList.DrawPrimitive(0, Run.VertexCount / 3, 1);
 					}

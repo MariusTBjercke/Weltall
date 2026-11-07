@@ -43,21 +43,29 @@ TEST_CASE("A sprite's hole runs from its feet to its head, as wide as its quads"
 	CHECK(SeeThroughHoleOf({}).HalfWidth == 0.0f);
 }
 
-TEST_CASE("The scenery is seen through only in front of the sprite, about it and above its feet", "[Field]")
+TEST_CASE("The scenery is seen through in a round bubble about the sprite, in front of it and above its floor", "[Field]")
 {
 	const FFieldSeeThroughHole Hole = StandingSprite();
-	// Half way up, well in front: all of it.
-	CHECK(SeeThroughShare(Hole, {0.0f, -8.0f, 500.0f}) == Catch::Approx(1.0f));
+	// The world's up is up the screen: y runs down.
+	const std::array<float, 3> Up{0.0f, -1.0f, 0.0f};
+	// At its middle, well in front: all of it.
+	CHECK(SeeThroughShare(Hole, {0.0f, -8.0f, 500.0f}, Up) == Catch::Approx(1.0f));
 	// Behind the sprite, or in front by less than the margin (a wall it stands against): none.
-	CHECK(SeeThroughShare(Hole, {0.0f, -16.0f, 1500.0f}) == 0.0f);
-	CHECK(SeeThroughShare(Hole, {0.0f, -16.0f, 980.0f}) == 0.0f);
+	CHECK(SeeThroughShare(Hole, {0.0f, -16.0f, 1500.0f}, Up) == 0.0f);
+	CHECK(SeeThroughShare(Hole, {0.0f, -16.0f, 980.0f}, Up) == 0.0f);
 	// Half way through the depth fade: half.
-	CHECK(SeeThroughShare(Hole, {0.0f, -16.0f, 936.0f}) == Catch::Approx(0.5f).margin(0.01));
-	// Far to its side, or below its feet on the screen (the floor in front of it): none.
-	CHECK(SeeThroughShare(Hole, {500.0f, -16.0f, 500.0f}) == 0.0f);
-	CHECK(SeeThroughShare(Hole, {0.0f, 8.0f, 500.0f}) == 0.0f);
-	// At nine tenths of its widened half width, level with its head: the soft edge.
-	CHECK(SeeThroughShare(Hole, {6.3f, -16.0f, 500.0f}) == Catch::Approx(0.1f / FieldSeeThrough::Edge).margin(0.01));
+	CHECK(SeeThroughShare(Hole, {0.0f, -16.0f, 936.0f}, Up) == Catch::Approx(0.5f).margin(0.01));
+	// Far to its side: none. The ground before its feet, lower than they are: none.
+	CHECK(SeeThroughShare(Hole, {500.0f, -16.0f, 500.0f}, Up) == 0.0f);
+	CHECK(SeeThroughShare(Hole, {0.0f, 4.0f, 500.0f}, Up) == 0.0f);
+	// Level with its middle, at nine tenths of the bubble's radius (Widen half heights): the soft edge.
+	const float Radius = 0.016f * FieldSeeThrough::Widen;
+	CHECK(SeeThroughShare(Hole, {0.9f * Radius * 500.0f, -8.0f, 500.0f}, Up) == Catch::Approx(0.1f / FieldSeeThrough::Edge).margin(0.01));
+	// The bubble is round: as far straight above its middle is the same.
+	CHECK(SeeThroughShare(Hole, {0.0f, (-0.016f - 0.9f * Radius) * 500.0f, 500.0f}, Up) == Catch::Approx(0.1f / FieldSeeThrough::Edge).margin(0.01));
 	// Behind the eye: none.
-	CHECK(SeeThroughShare(Hole, {0.0f, -8.0f, -10.0f}) == 0.0f);
+	CHECK(SeeThroughShare(Hole, {0.0f, -8.0f, -10.0f}, Up) == 0.0f);
+	// Without the world's up, what lies below its feet on the screen is kept.
+	CHECK(SeeThroughShare(Hole, {0.0f, -8.0f, 500.0f}, {}) == Catch::Approx(1.0f));
+	CHECK(SeeThroughShare(Hole, {0.0f, 4.0f, 500.0f}, {}) == 0.0f);
 }
