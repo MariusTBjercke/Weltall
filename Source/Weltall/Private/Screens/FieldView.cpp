@@ -1,7 +1,6 @@
 #include "FieldView.h"
 
 #include "FieldScreenFrame.h"
-#include "WeltallLog.h"
 #include "Field/FieldGears.h"
 #include "Field/FieldRenderState.h"
 #include "Gears/GearModels.h"
@@ -132,66 +131,9 @@ Weltall::FTexelKindCache* FFieldView::TexelKindsOf(const Weltall::FVram& SceneVr
 	return &TexelKinds;
 }
 
-namespace
-{
-	/**
-	 * TEMPORARY, for tracing parts that vanish while the camera moves: what the tick's drawing left out, by the reason
-	 * the kernel's rules give it (the bits of FieldPolygonDrop), and how many characters were submitted with no quad.
-	 * Removed once the cause of the report is known.
-	 */
-	void ReportFieldDrops(const Weltall::FFieldFrame& Now)
-	{
-		const auto Count = [](const auto& Polygons, int32& Drawn, std::array<int32, 5>& Out)
-		{
-			for (const auto& Polygon : Polygons)
-			{
-				Drawn += Polygon.bDrawn ? 1 : 0;
-				Out[0] += (Polygon.Dropped & Weltall::FieldPolygonDrop::Model) != 0 ? 1 : 0;
-				Out[1] += (Polygon.Dropped & Weltall::FieldPolygonDrop::OffScreen) != 0 ? 1 : 0;
-				Out[2] += (Polygon.Dropped & Weltall::FieldPolygonDrop::BackFace) != 0 ? 1 : 0;
-				Out[3] += (Polygon.Dropped & Weltall::FieldPolygonDrop::ZeroDepth) != 0 ? 1 : 0;
-				Out[4] += (Polygon.Dropped & Weltall::FieldPolygonDrop::BeyondFarBucket) != 0 ? 1 : 0;
-			}
-		};
-		int32 SceneryDrawn = 0;
-		int32 GearsDrawn = 0;
-		std::array<int32, 5> Scenery{};
-		std::array<int32, 5> Gears{};
-		Count(Now.Scenery.Polygons, SceneryDrawn, Scenery);
-		Count(Now.Gears.Polygons, GearsDrawn, Gears);
-		int32 Empty = 0;
-		for (std::size_t Character = 0; Character < Now.Characters.size(); ++Character)
-		{
-			const bool bAny = std::any_of(Now.Quads.begin(), Now.Quads.end(),
-				[Character](const Weltall::FFieldCharacterQuad& Quad) { return Quad.Character == Character; });
-			Empty += bAny ? 0 : 1;
-		}
-		// The characters that survived the ordering table: what the frame actually draws, which is where a sprite was lost.
-		std::vector<uint32> Ordered(Now.Characters.size(), 0);
-		for (const Weltall::FFieldDrawItem& Item : Now.Order)
-		{
-			if (Item.Kind == Weltall::EFieldDrawKind::Character && Item.Index < Ordered.size())
-			{
-				Ordered[Item.Index] = 1;
-			}
-		}
-		const int32 DrawnCharacters = static_cast<int32>(std::count(Ordered.begin(), Ordered.end(), 1));
-		UE_LOG(LogWeltall, Log,
-			TEXT("Field drops: zoom %.3f tick %u | scenery %d of %d (model %d screen %d back %d zero %d far %d) | gears %d of %d (model %d screen %d back %d zero %d far %d) | characters %d quads %d with none %d ordered %d"),
-			Now.ShownOffsets.Zoom, Now.Tick, SceneryDrawn, static_cast<int32>(Now.Scenery.Polygons.size()), Scenery[0], Scenery[1], Scenery[2],
-			Scenery[3], Scenery[4], GearsDrawn, static_cast<int32>(Now.Gears.Polygons.size()), Gears[0], Gears[1], Gears[2], Gears[3], Gears[4],
-			static_cast<int32>(Now.Characters.size()), static_cast<int32>(Now.Quads.size()), Empty, DrawnCharacters);
-	}
-}
-
 bool FFieldView::Fill(FFieldScreenFrame& Display, const Weltall::FFieldScene& Scene, const Weltall::FVram& SceneVram, const Weltall::FFieldFrame& Now,
 	const Weltall::FFieldFrame* Before, float Alpha, const std::vector<int32>* LayerMatches, const FShownMovie& Shown) const
 {
-	// TEMPORARY: the evidence the report of vanishing parts needs, a few times a second.
-	if ((Now.Tick % 20u) == 0u)
-	{
-		ReportFieldDrops(Now);
-	}
 	Display.MoviePicture = Shown.Picture;
 	Display.Alpha = Alpha;
 	Display.Cover = {};
