@@ -382,12 +382,14 @@ bool FFieldGearPartsDepthRenderingTest::RunTest(const FString&)
 	};
 	const FLayeredGear Apart(300);
 	const FLayeredGear Close(4);
+	const FLayeredGear Laid(1);
 	const TArray<FColor> ApartPainted = Render(Apart, EFieldSorting::PaintersOrder);
 	const TArray<FColor> ApartBuffered = Render(Apart, EFieldSorting::DepthBuffer);
 	const TArray<FColor> CloseBuffered = Render(Close, EFieldSorting::DepthBuffer);
+	const TArray<FColor> LaidBuffered = Render(Laid, EFieldSorting::DepthBuffer);
 	BeginReleaseResource(&Units);
 	FlushRenderingCommands();
-	for (const TArray<FColor>* Pixels : {&ApartPainted, &ApartBuffered, &CloseBuffered})
+	for (const TArray<FColor>* Pixels : {&ApartPainted, &ApartBuffered, &CloseBuffered, &LaidBuffered})
 	{
 		if (!TestEqual(TEXT("The frames were read back"), Pixels->Num(), ScreenWidth * ScreenHeight))
 		{
@@ -403,7 +405,9 @@ bool FFieldGearPartsDepthRenderingTest::RunTest(const FString&)
 	NearIn(ApartPainted, TEXT("painter's order: the far triangle linked last covers the near one"), 160, 112, 0, 0, 255);
 	NearIn(ApartBuffered, TEXT("depth buffer: beside the gear the background"), 300, 200, FilledGrey, FilledGrey, FilledGrey);
 	NearIn(ApartBuffered, TEXT("depth buffer: the near triangle stands in front of the far one"), 160, 112, 255, 0, 0);
-	NearIn(CloseBuffered, TEXT("depth buffer: within the margin the order decides, as on a detail laid on a surface"), 160, 112, 0, 0, 255);
+	// Four units apart is two parts of a gear, which a turning camera must not flip: the depth decides.
+	NearIn(CloseBuffered, TEXT("depth buffer: four units apart the depth decides"), 160, 112, 255, 0, 0);
+	NearIn(LaidBuffered, TEXT("depth buffer: within the margin the order decides, as on a detail laid on a surface"), 160, 112, 0, 0, 255);
 	return true;
 }
 

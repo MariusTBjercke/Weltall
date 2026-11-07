@@ -64,10 +64,13 @@ namespace
 
 	/**
 	 * How far behind the nearest of the 3D models (the gears, the children's models) one may stand and still be drawn
-	 * in the order: within it the order decides (details laid on a surface), beyond it the depth. The thinnest models
-	 * seen from behind (a save point, 12 units through) must stand farther than it.
+	 * in the order: within it the order decides (details laid on a surface), beyond it the depth. The gears' details lie
+	 * in their surfaces' planes exactly (every one of the eight a gear model's part lays over another), so the margin
+	 * need only take the rounding; wider, two parts a few units apart were drawn in the order, which a turning camera
+	 * flips from one frame to the next. The thinnest models seen from behind (a save point, 12 units through) must stand
+	 * farther than it.
 	 */
-	constexpr float ModelMargin = 8.0f;
+	constexpr float ModelMargin = 2.0f;
 
 	/**
 	 * How far behind the nearest surface of the scenery, across its plane, a piece may lie and still be drawn in the
