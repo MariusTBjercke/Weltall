@@ -106,7 +106,7 @@ $UE = ((Get-Content local.env | Select-String '^UE_ROOT=').Line -split '=', 2)[1
 Select-String -Path out\editor-tests.log -Pattern "Test Completed"
 ```
 
-Narrow the filter (`Weltall.Rendering.Field`) to run fewer. **Expected on this machine: 78 of 78 report
+Narrow the filter (`Weltall.Rendering.Field`) to run fewer. **Expected on this machine: 79 of 79 report
 `Result={Success}`** (2026-11-07). The in-place editor build took 90 s on top of an existing engine.
 
 `WeltallMapText <map id>` prints a disc map in the text format that story documents start from. Its
