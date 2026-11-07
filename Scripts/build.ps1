@@ -96,7 +96,9 @@ if (-not $LinkOnly) {
 	} finally {
 		Pop-Location
 	}
-	if ($Status -ne 0) { throw "the build failed; see out/builds/$Configuration.log" }
+	if ($Status -ne 0) {
+		throw "package.py failed: out/builds/$Configuration.log (the build) and out/builds/$Configuration-check.log (the start-up check)"
+	}
 }
 
 Set-PlayFolder
