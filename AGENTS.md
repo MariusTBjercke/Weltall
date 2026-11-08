@@ -138,7 +138,8 @@ Re-verify before contradicting any of these; each has a one-line check.
 | A cold `Development` build took 6 min and produced a 1.66 GB package | the `built in N min` line in the build's output, 2026-11-07 |
 | A one-file source change reaches the running game in ~2.5 min | a temporary `UE_LOG` marker in `GameLoopScreen.cpp` recompiled once, linked, and appeared in `Development-check.log`; 2026-11-07 |
 | Version lives in exactly one place | `git grep -n "ProjectVersion=" -- Config` → `Config/DefaultGame.ini` |
-| Settings and saves live outside the repo | `%LOCALAPPDATA%\Weltall` (`Saved/`), crashes in `Saved/Crashes` |
+| Settings and saves live outside the repo | `%LOCALAPPDATA%\Weltall` (`Settings.txt`, `Saves`, `States`) |
+| A packaged build writes its log and its crashes into its own folder | `out\builds\Development\Windows\Weltall\Saved\{Logs,Crashes}` after a run; the next build replaces them, and `Scripts\symbolize-crash.py` copies the newest crash to `out\crashes` and resolves it with the build's `Weltall.pdb` |
 | Discs are git-ignored and never packaged | `.gitignore` has `/Games/`; `archive()` skips `Games`, `Assets`, `Mods` |
 | Packaging links `Games/` with hard links, so source and build must share a drive | `link_games()` in `Scripts/package.py` |
 
