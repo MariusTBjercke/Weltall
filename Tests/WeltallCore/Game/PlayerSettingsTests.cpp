@@ -167,7 +167,7 @@ TEST_CASE("The settings' text lists every setting and reads back the same", "[Se
 	CHECK(ValueOf(Defaults, "field.detailed_pilots") == "true");
 	CHECK(ValueOf(Defaults, "field.gear_models") == "outside_cutscenes");
 	CHECK(ValueOf(Defaults, "field.battle_flashes") == "original");
-	CHECK(ValueOf(Defaults, "field.see_through") == "normal");
+	CHECK(ValueOf(Defaults, "field.see_through") == "off");
 	CHECK(ValueOf(Defaults, "sound.output") == "stereo");
 	CHECK(ValueOf(Defaults, "display.window_size").empty());
 	CHECK(ValueOf(Defaults, "display.aspect") == "window");

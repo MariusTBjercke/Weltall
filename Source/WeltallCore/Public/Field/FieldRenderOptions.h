@@ -143,7 +143,8 @@ namespace Weltall
 		EBattleFlashes BattleFlashes = EBattleFlashes::Original;
 		EMessageBoxScale MessageBoxScale = EMessageBoxScale::Original;
 		EMessageBoxBackground MessageBoxBackground = EMessageBoxBackground::Original;
-		EFieldSeeThrough SeeThrough = EFieldSeeThrough::Normal;
+		/** Off until the player turns it on: the original's picture first. */
+		EFieldSeeThrough SeeThrough = EFieldSeeThrough::Off;
 
 		bool operator==(const FFieldRenderOptions&) const = default;
 	};
