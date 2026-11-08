@@ -86,7 +86,7 @@
     {
       "id": "05",
       "title": "See-through scenery about the party on the field, and steadier 3D under the free camera",
-      "status": "in_progress",
+      "status": "done",
       "owner": "agent",
       "files": [
         "Source/WeltallCore/Public/Field/FieldSeeThrough.h",

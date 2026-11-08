@@ -4,11 +4,10 @@ Date: 2026-11-07. Branch `see-through-scenery`, brought into `main`. Build: `Wel
 
 ## What changed
 
-- **See-through scenery** (Options → Display → See-through scenery: Off / Small / Normal / Large, Normal by
-  default). Outside cutscenes, each party member's sprite, or the gear model standing in for it, gets a round
-  bubble (`FFieldSeeThroughHole`, `FieldSeeThrough.h`). Rays from the eye to fifteen points of each member (five heights by three across)
-  pick the placed models that hide them (`HidesFromEye`), and only when together they hide nearly half of that member
-  (`SeeThroughCoversEnough`, 45 %), so a bench before the feet is left alone; the model each stands on is never picked (`BearsSprite`); models
+- **See-through scenery** (Options → Display → See-through scenery: Off / Small / Normal / Large, Off by
+  default, the player's to turn on). Outside cutscenes, each party member's sprite, or the gear model standing in for it, gets a round
+  bubble (`FFieldSeeThroughHole`, `FieldSeeThrough.h`). Rays from the eye to five points of each member pick the
+  placed models that hide them (`HidesFromEye`); the model each stands on is never picked (`BearsSprite`); models
   touching a picked one, above that member's feet and in front of it, are picked with it. A picked model is seen
   through in a 4 x 4 ordered dither within the bubble, only in front of the member and above its floor, after
   0.2 s of hiding and fading in over 0.25 s, out over 0.35 s (`FFieldSeeThroughFade`, kept by `FFieldView`).
@@ -28,19 +27,22 @@ Date: 2026-11-07. Branch `see-through-scenery`, brought into `main`. Build: `Wel
 
 ## Verified
 
-- Core: `ctest --preset windows` — 1991 tests, the 19 known aborts of `.agents/tests/expected-aborts.txt`
+- Core: `ctest --preset windows` — 1990 tests, the 19 known aborts of `.agents/tests/expected-aborts.txt`
   failing and nothing else. One existing test changed its rule on purpose (FieldSceneTests: the polygon facing
   away now stays in the order under `InRange`).
-- Rendering: `Automation RunTests Weltall` — 81 of 81 `Result={Success}`, among them
-  `FieldSeeThroughShowsTheParty`, `FieldSeeThroughShowsThePartysGears`, `FieldSeeThroughOnlyWhatHidesTheParty`, `FieldSeeThroughNotWhatHidesTooLittle`,
+- Rendering: `Automation RunTests Weltall` — 80 of 80 `Result={Success}`, among them
+  `FieldSeeThroughShowsTheParty`, `FieldSeeThroughShowsThePartysGears`, `FieldSeeThroughOnlyWhatHidesTheParty`,
   `FieldShadowsStayOnGroundDrawnAfterThem` and the gear depth test at 4 and 1 units.
 - Package: `.\Scripts\build.ps1` — built, and the 60-second check passed.
 - Played by the owner from `D:\Games\Weltall` through each step: the cave with Weltall and Brigandier, a
-  bridge, platforms and jumps; the normal size was accepted. The last steps, the choice of size and the coverage
-  a model needs (after a bench in a house), await the owner's final play.
+  bridge, platforms and jumps; the normal size was accepted. A share of the member a model must hide before it is
+  seen through (fifteen points, 45 %) was tried and taken back: it left a pillar the party stood right against
+  unopened. Small furniture before the party is therefore seen through too, which is why the option is off by
+  default. The owner accepted it so and asked for the release.
 
 ## Known gaps
 
 - Scenes staged before a painted picture get no bubble.
 - The world map and battles are untouched.
 - A map that merges much into one large model sees all of it through when a part of it hides the party.
+- Small furniture (a bench, a crate) before the party is seen through as a pillar is.
