@@ -11,6 +11,7 @@
 #include "Graphics/TexturePictures.h"
 
 #include <array>
+#include <memory>
 #include <optional>
 #include <span>
 #include <vector>
@@ -18,8 +19,10 @@
 namespace Weltall
 {
 	class FGearModels;
+	class IGearDress;
 	struct FFieldGearLights;
 	struct FGearBonePackets;
+	struct FGearModel;
 
 	/**
 	 * The gears' floor shadow as each model's load sets it up: the sprites' shadow blob (a 4-bit page
@@ -62,14 +65,35 @@ namespace Weltall
 		bool bPortRows = false;
 	};
 
+	/**
+	 * What a layout's parts point into: the models it was laid out from, and the drawings that stand in
+	 * for them. A layout outlives the module that laid it out, which frees a slot's model as its scripts
+	 * ask, so a frame keeps one beside its items for as long as anything may read them: the renderer
+	 * takes a picture of the frame before the latest, whose parts it reads again.
+	 */
+	struct FFieldGearLayoutSources
+	{
+		std::vector<std::shared_ptr<const FMdlModel>> Parts;
+		std::vector<std::shared_ptr<const IGearDress>> Dresses;
+
+		/** Keeps Model's parts, and the drawing that stands in for them, alongside this. */
+		WELTALLCORE_API void Add(const FGearModel& Model);
+		void Clear() { Parts.clear(); Dresses.clear(); }
+	};
+
 	/** The field's ordering table takes a quarter of the depths: the kernel's shift for the gears' buckets. */
 	inline constexpr int32 FieldGearOrderingShift = 2;
 
-	/** Lays out what the loaded gears draw, one item per frame object, into Items (reusing its memory). */
-	WELTALLCORE_API void LayOutFieldGears(const FGearModels& Models, std::vector<FFieldGearLayoutItem>& Items);
+	/**
+	 * Lays out what the loaded gears draw, one item per frame object, into Items (reusing its memory). The
+	 * items' parts point into the models: Sources, when given, keeps those for as long as it lives.
+	 */
+	WELTALLCORE_API void LayOutFieldGears(const FGearModels& Models, std::vector<FFieldGearLayoutItem>& Items,
+		FFieldGearLayoutSources* Sources = nullptr);
 
 	/** Adds another module's models to a layout, after what it holds, their slots numbered from FirstSlot on. */
-	WELTALLCORE_API void AddFieldGearLayout(const FGearModels& Models, int32 FirstSlot, std::vector<FFieldGearLayoutItem>& Items);
+	WELTALLCORE_API void AddFieldGearLayout(const FGearModels& Models, int32 FirstSlot, std::vector<FFieldGearLayoutItem>& Items,
+		FFieldGearLayoutSources* Sources = nullptr);
 
 	/** A floor shadow or a bone's part as a tick drew it. */
 	struct FFieldGearObject
@@ -147,6 +171,8 @@ namespace Weltall
 		/** Scratch: the layout, and a part's vertices projected. */
 		std::vector<FFieldGearLayoutItem> Items;
 		std::vector<FGteProjection> Projected;
+		/** The models the items point into, kept while this frame may still be read. */
+		FFieldGearLayoutSources Sources;
 	};
 
 	/**

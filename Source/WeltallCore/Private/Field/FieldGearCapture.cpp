@@ -44,6 +44,7 @@ namespace Weltall
 		if (!Context.Gears.Models)
 		{
 			Gears.Items.clear();
+			Gears.Sources.Clear();
 			Gears.Objects.clear();
 			Gears.Polygons.clear();
 			Gears.Cloths.clear();

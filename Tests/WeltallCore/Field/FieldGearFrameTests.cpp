@@ -115,6 +115,46 @@ TEST_CASE("A played map's gears keep their layout from tick to tick, and move a 
 	}
 }
 
+TEST_CASE("A frame's gears keep the models their parts point into alive after the module frees a slot", "[Field][Gears][Content]")
+{
+	REQUIRE_DISC(Disc, EDiscRelease::UsaDisc1);
+	auto Session = Testing::EnterFieldMap(*Disc, MountainPathMap);
+	Session->Run(40);
+	const FEventContext& Context = Session->Play->Field().Context();
+	REQUIRE(Context.Gears.Models != nullptr);
+	FGearModels& Models = *Context.Gears.Models;
+	// A slot the map loaded itself: a sprite's stand-in wears a drawing, whose model is the one laid out.
+	int32 Slot = -1;
+	for (int32 Each = 0; Each < FGearModels::Slots && Slot < 0; ++Each)
+	{
+		const FGearModel* Model = Models.Model(Each);
+		if (Model != nullptr && Model->Dress == nullptr)
+		{
+			Slot = Each;
+		}
+	}
+	REQUIRE(Slot >= 0);
+	// The part the renderer reads again when it takes a picture of the frame before the latest.
+	const FFieldGearLayoutItem* Laid = nullptr;
+	for (const FFieldGearLayoutItem& Item : Session->Frame.Gears.Items)
+	{
+		if (Item.Slot == Slot && Item.Part != nullptr)
+		{
+			Laid = &Item;
+			break;
+		}
+	}
+	REQUIRE(Laid != nullptr);
+	const FMdlModel* Parts = Models.Model(Slot)->Parts.get();
+	std::weak_ptr<const FMdlModel> Watched = Models.Model(Slot)->Parts;
+	const std::size_t Vertices = Laid->Part->Vertices.size();
+	Models.Free(Slot);
+	// The frame outlives the module's model: its layout still holds what its items point into.
+	REQUIRE_FALSE(Watched.expired());
+	CHECK(Watched.lock().get() == Parts);
+	CHECK(Laid->Part->Vertices.size() == Vertices);
+}
+
 TEST_CASE("A played map's gears' textures reach the field's VRAM at their slots' places", "[Field][Gears][Content]")
 {
 	REQUIRE_DISC(Disc, EDiscRelease::UsaDisc1);

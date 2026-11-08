@@ -263,13 +263,25 @@ namespace Weltall
 		}
 	}
 
-	void LayOutFieldGears(const FGearModels& Models, std::vector<FFieldGearLayoutItem>& Items)
+	void FFieldGearLayoutSources::Add(const FGearModel& Model)
 	{
-		Items.clear();
-		AddFieldGearLayout(Models, 0, Items);
+		if (Model.Parts)
+		{
+			Parts.push_back(Model.Parts);
+		}
+		if (Model.Dress)
+		{
+			Dresses.push_back(Model.Dress);
+		}
 	}
 
-	void AddFieldGearLayout(const FGearModels& Models, int32 FirstSlot, std::vector<FFieldGearLayoutItem>& Items)
+	void LayOutFieldGears(const FGearModels& Models, std::vector<FFieldGearLayoutItem>& Items, FFieldGearLayoutSources* Sources)
+	{
+		Items.clear();
+		AddFieldGearLayout(Models, 0, Items, Sources);
+	}
+
+	void AddFieldGearLayout(const FGearModels& Models, int32 FirstSlot, std::vector<FFieldGearLayoutItem>& Items, FFieldGearLayoutSources* Sources)
 	{
 		uint32 Polygon = Items.empty() ? 0 : Items.back().FirstPolygon + Items.back().PolygonCount;
 		for (int32 Slot = 0; Slot < FGearModels::Slots; ++Slot)
@@ -278,6 +290,10 @@ namespace Weltall
 			if (Model == nullptr)
 			{
 				continue;
+			}
+			if (Sources != nullptr)
+			{
+				Sources->Add(*Model);
 			}
 			const bool bPortRows = Model->TextureY >= FVram::Height;
 			Items.push_back({FirstSlot + Slot, nullptr, nullptr, Model->ShadowHalfWidth, Model->ShadowHalfDepth, Polygon, 1, bPortRows});
@@ -299,6 +315,7 @@ namespace Weltall
 		EFieldCulling Culling, bool bDrawn, FFieldGearsFrame& Frame, int32 OrderingShift, const FGteMatrix* LightBefore)
 	{
 		Frame.Items.clear();
+		Frame.Sources.Clear();
 		Frame.Layout = Models.Revision;
 		Frame.Objects.clear();
 		Frame.Polygons.clear();
@@ -314,7 +331,7 @@ namespace Weltall
 		const FGteMatrix* LightBefore)
 	{
 		const std::size_t FirstItem = Frame.Items.size();
-		AddFieldGearLayout(Models, FirstSlot, Frame.Items);
+		AddFieldGearLayout(Models, FirstSlot, Frame.Items, &Frame.Sources);
 		for (int32 Slot = 0; Slot < FGearModels::Slots; ++Slot)
 		{
 			const FGearModel* Model = Models.Model(Slot);

@@ -585,6 +585,7 @@ namespace Weltall
 		View.ProjectionDistance = static_cast<uint16>(State.ProjectionDistance);
 		FFieldGearsFrame& Gears = GearsFrame;
 		Gears.Items.clear();
+		Gears.Sources.Clear();
 		Gears.Objects.clear();
 		Gears.Polygons.clear();
 		Gears.Cloths.clear();
