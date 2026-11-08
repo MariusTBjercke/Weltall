@@ -4,6 +4,7 @@
     python Scripts/release.py 0.8.0 --archives-only      # the files alone, to look at before drafting
     python Scripts/release.py 0.8.0 --platforms Windows  # one platform
     python Scripts/release.py 1.0.1-fork.1 --platforms Windows --notes .agents/releases/1.0.1-fork.1.md  # a fork's own notes
+    python Scripts/release.py 1.0.1-fork.1 --configuration Development ...  # where Shipping cannot be built (a Launcher engine)
 
 The release is built from HEAD, which must be clean, already pushed to GitHub (the draft points at it) and carry the
 version in Config/DefaultGame.ini's ProjectVersion. Each platform's Shipping package is built, run and archived by
@@ -140,17 +141,19 @@ def check_pushed(commit):
         refuse(f"GitHub does not have {commit[:7]} (push it first; is gh logged in?): {found.stderr.strip()}")
 
 
-def build(platform, commit):
-    """The platform's Shipping package of commit built, run and archived by package.py; the archives' paths."""
-    print(f"release: building the Shipping package for {platform}")
-    status = subprocess.run([sys.executable, str(REPO / "Scripts" / "package.py"), "Shipping", "--archive",
+def build(platform, commit, configuration="Shipping"):
+    """The platform's package of commit in configuration (Shipping for a release) built, run and archived by package.py;
+    the archives' paths, which package.py names after any configuration but Shipping."""
+    print(f"release: building the {configuration} package for {platform}")
+    status = subprocess.run([sys.executable, str(REPO / "Scripts" / "package.py"), configuration, "--archive",
                              "--platform", platform, "--revision", commit]).returncode
     if status != 0:
         refuse(f"the {platform} package failed (exit status {status}): see package.py's output above")
-    revision = (REPO / "out" / "builds" / "Shipping" / platform / "Revision.txt").read_text(encoding="utf-8").strip()
+    revision = (REPO / "out" / "builds" / configuration / platform / "Revision.txt").read_text(encoding="utf-8").strip()
     if revision != git("rev-parse", "--short", commit):
         refuse(f"the {platform} package is of {revision}, not of {commit[:7]}")
-    return RELEASES / f"Weltall-{revision}-{platform}{players_file(platform)}", RELEASES / f"Weltall-{revision}-{platform}-symbols.zip"
+    named = f"Weltall-{revision}-{platform}" + ("" if configuration == "Shipping" else f"-{configuration}")
+    return RELEASES / f"{named}{players_file(platform)}", RELEASES / f"{named}-symbols.zip"
 
 
 def players_file(platform):
@@ -163,6 +166,8 @@ def main():
     parser.add_argument("version", help="the release's version, as ProjectVersion has it (0.8.0)")
     parser.add_argument("--platforms", nargs="+", default=PLATFORMS, choices=PLATFORMS, help="the platforms to release (default: all three)")
     parser.add_argument("--archives-only", action="store_true", help="write the players' files and the notes, but tag and draft nothing")
+    parser.add_argument("--configuration", default="Shipping", choices=["Shipping", "Development"],
+                        help="the packages' configuration (default: Shipping; Development where Shipping cannot be built)")
     parser.add_argument("--notes", type=Path, help="a Markdown file of the release's notes, in place of the ones written here ({version} is filled in)")
     args = parser.parse_args()
     if not VERSION.fullmatch(args.version):
@@ -177,7 +182,7 @@ def main():
 
     players = []
     for platform in args.platforms:
-        archive, symbols = build(platform, commit)
+        archive, symbols = build(platform, commit, args.configuration)
         named = RELEASES / f"Weltall-{args.version}-{platform}{players_file(platform)}"
         archive.replace(named)
         if symbols.is_file():
