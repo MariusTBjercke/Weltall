@@ -10,6 +10,7 @@
 #include "Rendering/VramTexture.h"
 #include "Rendering/TextureModLibrary.h"
 #include "Rendering/TextureModSources.h"
+#include "WeltallLog.h"
 
 #include <algorithm>
 
@@ -53,6 +54,9 @@ void FFieldView::Follow(const Weltall::FFieldProgram& Program, bool bNewProgram,
 	{
 		Program.Drawing().LayOutGears(Context, GearLayout);
 		MeshGears = Program.Drawing().GearLayout(Context);
+		// A gear loaded or freed changes the layout the frames are drawn under: a crash's log says when.
+		UE_LOG(LogWeltall, Display, TEXT("The gears changed: %d objects laid out, layout %u, map loads %d"),
+			static_cast<int32>(GearLayout.size()), MeshGears, Program.Runtime().MapLoads());
 		Mesh = MakeShared<const FFieldSceneMesh>(Program.Drawing().Scene(), GearLayout, MeshGears, Program.Drawing().SpriteSheets());
 		MeshMapLoads = Program.Runtime().MapLoads();
 		DisplayFrames.Reset();
