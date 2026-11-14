@@ -11,8 +11,9 @@ prints `SKIPPED: disc not found in Games/` and terminates the process deliberate
 So these are not failures of the code under test, and `ctest` exits 1 on such a machine by design.
 A failure that is NOT in this list, or one whose message is not that `SKIP`, is a real regression.
 
-Snapshot: 19 tests, Weltall 1.0.1, 2026-11-07, `Games/` holding only `Xenogears (USA) (Disc 1).bin` and
-`(Disc 2).bin`. Re-derive with `ctest --preset windows 2>&1 | Select-String "tests FAILED" -Context 0,25`.
+Snapshot: 19 of 1998 tests, the fork on upstream 1.0.3, 2026-11-14, `Games/` holding only
+`Xenogears (USA) (Disc 1).bin` and `(Disc 2).bin`. Re-derive with
+`ctest --preset windows 2>&1 | Select-String "tests FAILED" -Context 0,25`.
 The names can change when upstream edits a test; the criterion above is what matters.
 
 Voice language chooses matching USA and undub sources without changing text or the drive

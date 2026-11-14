@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated": "2026-11-07T21:00:00Z",
+  "updated": "2026-11-14T14:10:00Z",
   "items": [
     {
       "id": "01",
@@ -102,6 +102,26 @@
       "verify": "the owner plays a map with scenery in front of the party from D:\\Games\\Weltall, at each bubble size, turning the free camera",
       "blocked_by": [],
       "evidence": ".agents/validation/m02-see-through.md"
+    },
+    {
+      "id": "06",
+      "title": "Take upstream 1.0.2 and 1.0.3 into the fork",
+      "status": "done",
+      "owner": "agent",
+      "files": [
+        "Config/DefaultGame.ini",
+        "Shaders/Private/FieldScene.usf",
+        "Source/Weltall/Private/Rendering/FieldSceneRendering.cpp",
+        "Source/Weltall/Private/Rendering/FieldSceneShaders.h",
+        "Source/Weltall/Private/Screens/FieldScreenFrame.cpp",
+        "Source/Weltall/Private/Screens/FieldView.cpp",
+        "Source/WeltallCore/Private/Game/PlayerSettings.cpp",
+        "Source/WeltallCore/Private/Menu/MenuSettingsPages.cpp",
+        "Source/WeltallCore/Public/Field/FieldRenderOptions.h"
+      ],
+      "verify": "ctest --preset windows in Tests/ (1979 of 1998 pass; the 19 aborts are the listed ones), the editor's 85 automation tests, and Scripts/package.py Development's check",
+      "blocked_by": [],
+      "evidence": ".agents/research/upstream-1.0.3.md"
     }
   ]
 }
