@@ -1,6 +1,6 @@
-﻿{
+{
   "schema": 1,
-  "updated": "2026-11-14T14:52:00Z",
+  "updated": "2026-11-14T17:35:00Z",
   "items": [
     {
       "id": "01",
@@ -126,15 +126,34 @@
     {
       "id": "07",
       "title": "Keep a gear's floor shadow under the soles of its feet",
-      "status": "in_progress",
+      "status": "done",
       "owner": "agent",
       "files": [
         "Source/Weltall/Private/Rendering/FieldSceneRendering.cpp",
-        "Source/WeltallEditor/Private/Tests/FieldGearsRenderingTest.cpp"
+        "Source/WeltallEditor/Private/Tests/FieldGearsRenderingTest.cpp",
+        "Source/WeltallEditor/Private/Tests/BattleRenderingTest.cpp",
+        "Source/WeltallEditor/Private/Tests/WorldMapRenderingTest.cpp"
       ],
-      "verify": "the owner looks at a gear's feet on the field from D:\\Games\\Weltall; the editor's 85 automation tests and Scripts/package.py Development's check",
+      "verify": "the owner looked at a gear's feet on the field from D:\\Games\\Weltall and accepted it; the editor's 85 automation tests and Scripts/package.py Development's check",
       "blocked_by": [],
       "evidence": ".agents/research/gear-shadow-band.md"
+    },
+    {
+      "id": "08",
+      "title": "Keep the party and its shadows on the display's view",
+      "status": "done",
+      "owner": "agent",
+      "files": [
+        "Source/Weltall/Private/Rendering/FieldFrameDraw.cpp",
+        "Source/Weltall/Private/Rendering/FieldFrameGeometry.cpp",
+        "Source/Weltall/Private/Rendering/FieldPictureStretch.cpp",
+        "Source/Weltall/Private/Screens/FieldView.cpp",
+        "Source/Weltall/Public/Rendering/FieldSceneRendering.h",
+        "Source/WeltallEditor/Private/Tests/FieldFrameRenderingTest.cpp"
+      ],
+      "verify": "the owner turned the camera on the field from D:\\Games\\Weltall and accepted it; the editor's 85 automation tests and Scripts/package.py Development's check",
+      "blocked_by": [],
+      "evidence": ".agents/research/field-view-lag.md"
     }
   ]
 }
