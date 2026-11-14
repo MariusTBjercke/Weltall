@@ -1,6 +1,6 @@
-{
+﻿{
   "schema": 1,
-  "updated": "2026-11-14T14:10:00Z",
+  "updated": "2026-11-14T14:52:00Z",
   "items": [
     {
       "id": "01",
@@ -122,6 +122,19 @@
       "verify": "ctest --preset windows in Tests/ (1979 of 1998 pass; the 19 aborts are the listed ones), the editor's 85 automation tests, and Scripts/package.py Development's check",
       "blocked_by": [],
       "evidence": ".agents/research/upstream-1.0.3.md"
+    },
+    {
+      "id": "07",
+      "title": "Keep a gear's floor shadow under the soles of its feet",
+      "status": "in_progress",
+      "owner": "agent",
+      "files": [
+        "Source/Weltall/Private/Rendering/FieldSceneRendering.cpp",
+        "Source/WeltallEditor/Private/Tests/FieldGearsRenderingTest.cpp"
+      ],
+      "verify": "the owner looks at a gear's feet on the field from D:\\Games\\Weltall; the editor's 85 automation tests and Scripts/package.py Development's check",
+      "blocked_by": [],
+      "evidence": ".agents/research/gear-shadow-band.md"
     }
   ]
 }
