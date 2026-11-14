@@ -355,6 +355,9 @@ bool FFieldGearShadowRenderingTest::RunTest(const FString&)
 	// Row 166, 3 units above the floor: the gear's sole still lies in its shadow.
 	NearIn(Buffered, TEXT("depth buffer: the shadow still under the gear's sole"), 160, 166, 0, 0, 128);
 	NearIn(Buffered, TEXT("depth buffer: the shadow on the floor beside the gear"), 220, 165, ShadowGrey, ShadowGrey, ShadowGrey);
+	// Row 162, 10 units above the floor: the gear's leg stands in front of its shadow. The stand-ins are scaled to their
+	// sprites, so their feet are only some units tall; a shadow tested higher up would paint across them.
+	NearIn(Buffered, TEXT("depth buffer: the shadow stays under the gear's feet"), 160, 162, 0, 0, 255);
 	return true;
 }
 

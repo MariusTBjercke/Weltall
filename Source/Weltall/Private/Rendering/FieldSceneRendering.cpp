@@ -89,9 +89,11 @@ namespace
 
 	/**
 	 * Over a model's polygons a shadow is tested this close to its floor: a gear stands on the ground the shadow lies on,
-	 * so all of it but the soles of its feet stands in front of the floor behind it.
+	 * so all of it but the soles of its feet stands in front of the floor behind it. The field's stand-ins are scaled to
+	 * the sprites they replace, so their feet are only some ten units tall, of which a few are the soles: a wider band
+	 * paints the shadow across them, which reads as the shadow cutting through the legs.
 	 */
-	constexpr float OverModelShadowHeight = 16.0f;
+	constexpr float OverModelShadowHeight = 4.0f;
 
 	/** Draws a run's pixels outside the marks as they are, keeping their depth when asked (the shadows test it). */
 	FRHIDepthStencilState* OutsideMarks(bool bWrite)
