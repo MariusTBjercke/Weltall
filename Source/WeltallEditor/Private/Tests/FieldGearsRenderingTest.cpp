@@ -352,12 +352,11 @@ bool FFieldGearShadowRenderingTest::RunTest(const FString&)
 	// Row 155 shows the triangle 23 units above its floor, and behind it the floor 1163 units ahead, in the shadow.
 	NearIn(Painted, TEXT("painter's order: the shadow linked later subtracts from the gear"), 160, 155, 0, 0, 128);
 	NearIn(Buffered, TEXT("depth buffer: the gear stands in front of its shadow"), 160, 155, 0, 0, 255);
-	// Row 166, 3 units above the floor: the gear's sole still lies in its shadow.
-	NearIn(Buffered, TEXT("depth buffer: the shadow still under the gear's sole"), 160, 166, 0, 0, 128);
+	// Rows 166 and 162, 3 and 10 units above the floor: the gear stands in front of its own shadow right down to its
+	// soles, so no shadow is drawn over its pixels and its outline cannot flicker against the shadow's edge.
+	NearIn(Buffered, TEXT("depth buffer: the gear's sole stands in front of its shadow"), 160, 166, 0, 0, 255);
+	NearIn(Buffered, TEXT("depth buffer: the gear's leg stands in front of its shadow"), 160, 162, 0, 0, 255);
 	NearIn(Buffered, TEXT("depth buffer: the shadow on the floor beside the gear"), 220, 165, ShadowGrey, ShadowGrey, ShadowGrey);
-	// Row 162, 10 units above the floor: the gear's leg stands in front of its shadow. The stand-ins are scaled to their
-	// sprites, so their feet are only some units tall; a shadow tested higher up would paint across them.
-	NearIn(Buffered, TEXT("depth buffer: the shadow stays under the gear's feet"), 160, 162, 0, 0, 255);
 	return true;
 }
 

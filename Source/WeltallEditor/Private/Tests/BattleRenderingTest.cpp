@@ -726,13 +726,13 @@ bool FBattleDepthRenderingTest::RunTest(const FString&)
 	};
 	Near(Painted, TEXT("in the order: the far gear linked last over the near one"), 160, 130, 0, 255, 0);
 	Near(Painted, TEXT("in the order: the shadow over the gear's legs"), 180, 202, 0, 0, 191);
+	Near(Painted, TEXT("in the order: the shadow linked after the gear covers its sole"), 180, 214, 0, 0, 191);
 	Near(Painted, TEXT("in the order: the wall over the sprite before it"), 35, 125, 128, 64, 0);
 	Near(Painted, TEXT("in the order: the far pillar over the wall"), 0, 120, 128, 0, 128);
 	Near(Buffered, TEXT("per pixel: the stage keeps its order, the far pillar over the wall"), 0, 120, 128, 0, 128);
 	Near(Sorted, TEXT("scenery too: the wall in front of the far pillar"), 0, 120, 128, 64, 0);
 	for (const auto& [Pixels, Name] : {std::pair(&Painted, TEXT("in the order")), std::pair(&Buffered, TEXT("per pixel")), std::pair(&Sorted, TEXT("scenery too"))})
 	{
-		Near(*Pixels, FString::Printf(TEXT("%s: the gear's sole, 2 units above the floor, in its shadow"), Name), 180, 214, 0, 0, 191);
 		Near(*Pixels, FString::Printf(TEXT("%s: the gear's soles under the stage's floor, drawn after it"), Name), 140, 218, 0, 0, 255);
 		Near(*Pixels, FString::Printf(TEXT("%s: the spark inside the gear, linked after it"), Name), 130, 90, 255, 0, 0);
 		Near(*Pixels, FString::Printf(TEXT("%s: the shadow on the floor beside the gear"), Name), 240, 210, 64, 64, 64);
@@ -741,6 +741,7 @@ bool FBattleDepthRenderingTest::RunTest(const FString&)
 	for (const auto& [Pixels, Name] : {std::pair(&Buffered, TEXT("per pixel")), std::pair(&Sorted, TEXT("scenery too"))})
 	{
 		Near(*Pixels, FString::Printf(TEXT("%s: the near gear in front of the far one"), Name), 160, 130, 0, 0, 255);
+		Near(*Pixels, FString::Printf(TEXT("%s: the gear's sole, 2 units above the floor, stands in front of its shadow"), Name), 180, 214, 0, 0, 255);
 		Near(*Pixels, FString::Printf(TEXT("%s: the gear's legs, 26 units above the floor, in front of its shadow"), Name), 180, 202, 0, 0, 255);
 		Near(*Pixels, FString::Printf(TEXT("%s: the sprite in front of the wall linked after it"), Name), 35, 125, 255, 0, 0);
 	}

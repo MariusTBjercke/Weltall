@@ -523,7 +523,7 @@ bool FArenaDepthRenderingTest::RunTest(const FString&)
 		Near(*Pixels, *FString::Printf(TEXT("%s: the ground keeps the order, the gear over it"), Name), 160, 120, 0, 0, 255);
 		Near(*Pixels, *FString::Printf(TEXT("%s: the effect keeps the order, over the gear"), Name), 160, 78, 255, 0, 0);
 		Near(*Pixels, *FString::Printf(TEXT("%s: the gear's legs, 26 units above the floor, in front of its shadow"), Name), 180, 127, 0, 0, 255);
-		Near(*Pixels, *FString::Printf(TEXT("%s: the gear's sole, 2 units above the floor, in its shadow"), Name), 180, 133, 0, 0, 127);
+		Near(*Pixels, *FString::Printf(TEXT("%s: the gear's sole, 2 units above the floor, stands in front of its shadow"), Name), 180, 133, 0, 0, 255);
 		Near(*Pixels, *FString::Printf(TEXT("%s: the shadow on the floor beside the gear"), Name), 200, 130, 64, 64, 64);
 	}
 	return true;

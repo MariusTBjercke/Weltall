@@ -37,15 +37,26 @@ floor, one pixel row per 1.8 units): with `OverModelShadowHeight` at 16 the band
 
 ## Fix
 
-`OverModelShadowHeight` 16 → 4 in `FieldSceneRendering.cpp`, and a regression assertion in
-`FieldGearShadowRenderingTest`: row 162, ~10 units above the floor, must show the gear and not the
-shadow. The full editor suite passes, 85 of 85, including the battle test that wants the sole 2
-units above the floor in its shadow and the legs at 26 units in front of it.
+Two steps, the same day:
+
+1. `OverModelShadowHeight` 16 → 4, with a regression assertion in `FieldGearShadowRenderingTest` (row
+   162, ~10 units above the floor, must show the gear and not the shadow). That kept the band on the
+   sole but its edge still crossed the boot's contour by about a pixel and flickered in and out as the
+   camera turned.
+2. The band is gone: `DepthStatesOf` draws a shadow only outside the sprites' and the models' marks, so
+   a model always stands in front of the shadow on its floor, right down to its soles, and no depth
+   comparison sits on its outline. `OverModelShadowHeight` and the second shadow draw are removed.
+
+Tests that wanted a sole in shadow were updated with the rule: in the painter's order the shadow is
+drawn in the order, as the original does, so it still covers the sole there; against the depth buffer
+the model is in front. `FieldGearsStandInFrontOfTheirFloorShadows` wants the gear at 3 and 10 units
+above the floor; the battle and arena tests want the gear at 2 units and keep the painter's order's
+answer. The full editor suite passes, 85 of 85.
 
 ## Still open
 
-- The band is still a fixed world height, not a fraction of the model. Four units is the sole for
-  the gears and children's models seen so far; a much smaller stand-in would take it further up its
-  feet. Scaling it per model means the height has to travel with each shadow run.
-- `CharacterShadowHeight` and `GearShadowHeight` are unchanged: they only act outside all marks, so
-  they cannot paint over a sprite or a model.
+- A model's soles are no longer darkened by the shadow on its floor. If that contact shading is
+  missed, it needs a different trick that cannot put a depth comparison on the model's outline (its
+  own decal on the model, say), not a height in the shared shadow pass.
+- The main `CharacterShadowHeight` (64) and `GearShadowHeight` (256) are unchanged: they only act
+  outside all marks, so they cannot paint over a sprite or a model.

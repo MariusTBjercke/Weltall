@@ -153,10 +153,9 @@ enum class EFieldRunDepth : uint8
 	 */
 	PushedBack,
 	/**
-	 * A shadow on its floor: never over a sprite's marked pixels, elsewhere as the painter's order draws it; where the
-	 * drawing knows the floor's up (FFieldSceneDraw::FloorUp), not where what was drawn there before it stands well above
-	 * its floor (a ledge or a wall in front of it), and over a model's pixels only where it stands close to the floor
-	 * (a gear's soles).
+	 * A shadow on its floor: never over a sprite's or a model's marked pixels, elsewhere as the painter's order draws it;
+	 * where the drawing knows the floor's up (FFieldSceneDraw::FloorUp), not where what was drawn there before it stands
+	 * well above its floor (a ledge or a wall in front of it).
 	 */
 	OutsideMask,
 };

@@ -87,14 +87,6 @@ namespace
 	constexpr float CharacterShadowHeight = 64.0f;
 	constexpr float GearShadowHeight = 256.0f;
 
-	/**
-	 * Over a model's polygons a shadow is tested this close to its floor: a gear stands on the ground the shadow lies on,
-	 * so all of it but the soles of its feet stands in front of the floor behind it. The field's stand-ins are scaled to
-	 * the sprites they replace, so their feet are only some ten units tall, of which a few are the soles: a wider band
-	 * paints the shadow across them, which reads as the shadow cutting through the legs.
-	 */
-	constexpr float OverModelShadowHeight = 4.0f;
-
 	/** Draws a run's pixels outside the marks as they are, keeping their depth when asked (the shadows test it). */
 	FRHIDepthStencilState* OutsideMarks(bool bWrite)
 	{
@@ -259,14 +251,11 @@ namespace
 				Result.States[0] = OutsideMarks(false);
 				break;
 			}
-			// Outside the marks against what stands well above the floor; over a model's pixels (not a sprite's), close to it.
+			// Outside the marks against what stands well above the floor. A model always stands in front of the shadow on
+			// its floor, its soles included: no shadow is drawn over its pixels, so its outline cannot flicker against one.
 			Result.States[0] = TStaticDepthStencilState<false, CF_GreaterEqual, true, CF_Equal, SO_Keep, SO_Keep, SO_Keep, true, CF_Equal, SO_Keep, SO_Keep, SO_Keep,
 				StencilMarks, 0>::GetRHI();
 			Result.ShadowHeights[0] = FVector2f(CharacterShadowHeight, GearShadowHeight);
-			Result.States[1] = Result.States[0];
-			Result.References[1] = StencilModel;
-			Result.ShadowHeights[1] = FVector2f(OverModelShadowHeight, OverModelShadowHeight);
-			Result.Count = 2;
 			break;
 		default:
 			Result.States[0] = TStaticDepthStencilState<false, CF_Always>::GetRHI();
