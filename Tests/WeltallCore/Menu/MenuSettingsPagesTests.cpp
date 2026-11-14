@@ -154,7 +154,7 @@ TEST_CASE("The Modding page's balance rows show the original first and step thro
 {
 	FPlayerSettings Settings;
 	bool bCustomPicked = false;
-	REQUIRE(FSettingsPages::RowCount(ESettingsPage::Modding) == 5);
+	REQUIRE(FSettingsPages::RowCount(ESettingsPage::Modding) == 6);
 	const FSettingsRow Heading = FSettingsPages::Row(ESettingsPage::Modding, 0, Settings);
 	CHECK(Heading.bHeading);
 	CHECK(Heading.Label == Text::Modding::Balance);
@@ -191,6 +191,11 @@ TEST_CASE("The Modding page's balance rows show the original first and step thro
 	CHECK(Settings.Balance.Encounters == EEncounterRate::None);
 	CHECK(FSettingsPages::Row(ESettingsPage::Modding, 3, Settings).Value == "None");
 	CHECK(FSettingsPages::Activate(ESettingsPage::Modding, 3, Settings, false) == ESettingsAction::None);
+	CHECK(FSettingsPages::Row(ESettingsPage::Modding, 5, Settings).Label == Text::Modding::ExplorationFastForward.Label);
+	CHECK(FSettingsPages::Row(ESettingsPage::Modding, 5, Settings).Value == "Off");
+	REQUIRE(FSettingsPages::Step(ESettingsPage::Modding, 5, 1, Settings, bCustomPicked));
+	CHECK(Settings.Balance.bExplorationFastForward);
+	CHECK(FSettingsPages::Row(ESettingsPage::Modding, 5, Settings).Value == "On");
 	CHECK(FSettingsPages::Title(ESettingsPage::Modding) == Text::Titles::Modding);
 }
 
@@ -649,6 +654,20 @@ TEST_CASE("The CRT filter's parts show the look in use, and changing one makes i
 	CHECK(FSettingsPages::Row(ESettingsPage::Crt, 1, Settings).Value == "Stripes");
 	Settings.Display.Crt = ECrtFilter::Custom;
 	CHECK(FSettingsPages::Row(ESettingsPage::Crt, 1, Settings).Value == "None");
+}
+
+TEST_CASE("The Display page cycles the field compass through four placements and off", "[Menu]")
+{
+	FPlayerSettings Settings;
+	bool bCustomPicked = false;
+	const int32 Row = FSettingsPages::RowCount(ESettingsPage::Display) - 1;
+	CHECK(FSettingsPages::Row(ESettingsPage::Display, Row + 2, Settings, false, WideDisplay).Label == "Compass");
+	for (const std::string_view Value : {"16:9", "21:9", "Screen", "Off", "4:3"})
+	{
+		CHECK(FSettingsPages::Row(ESettingsPage::Display, Row, Settings).Value == Value);
+		REQUIRE(FSettingsPages::Step(ESettingsPage::Display, Row, 1, Settings, bCustomPicked));
+	}
+	CHECK(Settings.Field.Compass == ECompassPlacement::Wide);
 }
 
 TEST_CASE("The window's size is chosen among the display's, from the window's own", "[Menu]")

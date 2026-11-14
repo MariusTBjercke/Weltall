@@ -40,15 +40,20 @@ You'll need your own copy of the USA release or a supported English undub. No ga
 
 ## What's new
 
-- Fixed a stop at the start of the Brigandier battle near Dazil in the Brazilian Portuguese translation.
-  The battle now continues when a line of dialogue is missing from a patched disc.
-  [Issue #35](https://github.com/Roman215/Weltall/issues/35)
-- Choose the button symbols that match your controller under **Options → Controls → Controller icons**.
-  Automatic follows the detected controller. You can also choose Xbox, PlayStation, Nintendo or Steam Deck.
-  Your bindings stay the same. [Issue #31](https://github.com/Roman215/Weltall/issues/31)
-- To change your party during free play, turn on **Options → Modding → Party changes**, then hold **Gear L**
-  and press **Menu** on the field or world map (L2 + Square by default). Story restrictions and member
-  availability still apply. The option is off by default.
+- Fill a 4:3 display, including handhelds like the Retroid Pocket Nova. Choose **4:3** under
+  **Options → Display → Aspect ratio** and turn **Integer scaling** off.
+- Bind and use two-button shortcuts with the on-screen controls on Android. Under **Options → Controls
+  → Save states**, select a binding, hold one touch button and tap another. Use the same order in play.
+  [Issue #43](https://github.com/Roman215/Weltall/issues/43)
+- Speed up the field, world map and in-game cutscenes to 2x or 4x. Turn on **Field fast-forward** under
+  **Options → Modding → Balance**. R1 steps up and L1 steps down. Menus and prerecorded movies play at
+  normal speed. [Issue #44](https://github.com/Roman215/Weltall/issues/44)
+- Use a second controller for player one in normal play, even when the system assigns it a separate user.
+  Battling can still reserve a controller for player two. [Issue #45](https://github.com/Roman215/Weltall/issues/45)
+- Fall back to disc data if an optional asset folder becomes unavailable during play.
+  [Issue #47](https://github.com/Roman215/Weltall/issues/47)
+- Correct Adreno 610 detection on Android so the Vulkan workaround uses single-sample field rendering
+  when MSAA is selected. [Issue #41](https://github.com/Roman215/Weltall/issues/41)
 
 ## Playing
 
@@ -87,8 +92,8 @@ If the game stops with an error on screen, attach the log file it names to a
 [bug report](https://github.com/Roman215/Weltall/issues/new?template=bug_report.md) and describe what you
 were doing. If it crashes, zip and attach the newest folder in `%LOCALAPPDATA%\\Weltall\\Saved\\Crashes`
 (Windows) or `~/.config/Epic/Weltall/Saved/Crashes` (Linux). On Android, tap **Save the log** on the
-error screen, or under **Options → Saves** after a crash, and attach the zip file it saves. A save from
-just before the problem helps too.
+error screen or reopen the game and use **Options → Saves → Save the log**. Attach the zip file it
+saves. A save from just before the problem helps too.
 
 ## Support
 

@@ -83,6 +83,15 @@ namespace Weltall
 		Off,
 	};
 
+	enum class ECompassPlacement : uint8
+	{
+		Standard,
+		Wide,
+		Ultrawide,
+		Screen,
+		Off,
+	};
+
 	/** How the message windows are scaled on the display. */
 	enum class EMessageBoxScale : uint8
 	{
@@ -145,6 +154,7 @@ namespace Weltall
 		EMessageBoxBackground MessageBoxBackground = EMessageBoxBackground::Original;
 		/** Off until the player turns it on: the original's picture first. */
 		EFieldSeeThrough SeeThrough = EFieldSeeThrough::Off;
+		ECompassPlacement Compass = ECompassPlacement::Wide;
 
 		bool operator==(const FFieldRenderOptions&) const = default;
 	};

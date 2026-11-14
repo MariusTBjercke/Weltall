@@ -5,6 +5,7 @@
 #include "FieldSceneShaders.h"
 #include "PipelineStateCache.h"
 #include "PixelShaderUtils.h"
+#include "RHI.h"
 #include "RHIStaticStates.h"
 #include "RenderGraphBuilder.h"
 #include "RenderGraphUtils.h"
@@ -397,7 +398,9 @@ namespace
 
 		const FGlobalShaderMap* ShaderMap = GetGlobalShaderMap(GMaxRHIFeatureLevel);
 		TShaderMapRef<FFieldSceneVS> VertexShader(ShaderMap);
-		TShaderMapRef<FFieldScenePS> PixelShader(ShaderMap);
+		FFieldScenePS::FPermutationDomain Permutation;
+		Permutation.Set<FFieldScenePS::FPerSampleTexels>(Samples == MsaaSamples);
+		TShaderMapRef<FFieldScenePS> PixelShader(ShaderMap, Permutation);
 		// H times the clip units of one pixel of the original screen: its height fills the target's.
 		const float Vertical = Draw.ProjectionDistance * 2.0f / ScreenHeight;
 		const FVector2f ProjectionScale(Vertical * static_cast<float>(Size.Y) / static_cast<float>(Size.X), Vertical);
@@ -432,7 +435,7 @@ namespace
 
 		GraphBuilder.AddPass(RDG_EVENT_NAME("FieldScene"), PassParameters, ERDGPassFlags::Raster,
 			[PassParameters, Runs, VertexShader, PixelShader, Viewport, ProjectionScale, VramUnits, Filter, SpriteFilter, StaticCorners, StaticPolygons, bScissor,
-				ScissorRect, bDepthTarget, FloorUp, bShadowsOnFloors, Samples, Replacements, SeeThrough](FRDGAsyncTask, FRHICommandList& RHICmdList)
+				ScissorRect, bDepthTarget, FloorUp, bShadowsOnFloors, Replacements, SeeThrough](FRDGAsyncTask, FRHICommandList& RHICmdList)
 			{
 				RHICmdList.SetViewport(static_cast<float>(Viewport.Min.X), static_cast<float>(Viewport.Min.Y), 0.0f, static_cast<float>(Viewport.Max.X),
 					static_cast<float>(Viewport.Max.Y), 1.0f);
@@ -494,7 +497,6 @@ namespace
 						PixelParameters.SpriteFilter = SpriteFilter;
 						PixelParameters.ColorScale = IsBlended(Run) && Run.Blend == Weltall::EBlendMode::AddQuarter ? 0.25f : 1.0f;
 						PixelParameters.OutputAlpha = IsBlended(Run) && Run.Blend == Weltall::EBlendMode::Average ? 0.5f : 1.0f;
-						PixelParameters.SampleCount = Samples;
 						for (uint32 Hole = 0; Hole < SeeThrough.Count; ++Hole)
 						{
 							PixelParameters.SeeThroughFeet[Hole] = SeeThrough.Feet[Hole];
@@ -530,6 +532,13 @@ FVector4f FieldScreenPlacement(FIntPoint Size)
 	return FVector4f(Scale, Scale, static_cast<float>(Size.X) * 0.5f - ScreenWidth * 0.5f * Scale, 0.0f);
 }
 
+uint8 FieldSceneSampleCount(EFieldAntiAliasing AntiAliasing, FStringView AndroidAdapterName)
+{
+	// Android Vulkan reports the adapter name with this suffix and does not set GRHIDeviceId.
+	const bool bAdreno610 = AndroidAdapterName.Equals(TEXT("Adreno (TM) 610 Vulkan"), ESearchCase::IgnoreCase);
+	return AntiAliasing == EFieldAntiAliasing::Msaa && !bAdreno610 ? MsaaSamples : 1;
+}
+
 void AddFieldScenePasses(FRDGBuilder& GraphBuilder, const FFieldSceneMesh& Mesh, const FVramTexture& Vram, const FFieldSceneDraw& Draw,
 	FRDGTextureRef Output, const FIntRect& Area)
 {
@@ -538,7 +547,7 @@ void AddFieldScenePasses(FRDGBuilder& GraphBuilder, const FFieldSceneMesh& Mesh,
 		return;
 	}
 	const int32 Factor = Draw.AntiAliasing == EFieldAntiAliasing::Supersampling ? SupersamplingFactor : 1;
-	const uint8 Samples = Draw.AntiAliasing == EFieldAntiAliasing::Msaa ? MsaaSamples : 1;
+	const uint8 Samples = FieldSceneSampleCount(Draw.AntiAliasing, PLATFORM_ANDROID ? FStringView(GRHIAdapterName) : FStringView());
 	const FIntPoint Size = Area.Size() * Factor;
 	const FSceneBuffers Buffers = UploadSceneBuffers(GraphBuilder, Mesh, Draw, Size);
 	const FIntRect Target(FIntPoint::ZeroValue, Size);

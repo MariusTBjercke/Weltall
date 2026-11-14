@@ -323,6 +323,7 @@ namespace Weltall
 			Visitor.Choice("field.message_box_scale", Field.MessageBoxScale, {"original", "whole", "smaller"});
 			Visitor.Choice("field.message_box_background", Field.MessageBoxBackground, {"original", "solid"});
 			Visitor.Choice("field.see_through", Field.SeeThrough, {"off", "small", "normal", "large"});
+			Visitor.Choice("field.compass", Field.Compass, {"4:3", "16:9", "21:9", "screen", "off"});
 
 			Visitor.Level("sound.master_volume", Settings.Volumes.Master, 0, FSoundVolumes::Full);
 			Visitor.Level("sound.music_volume", Settings.Volumes.Music, 0, FSoundVolumes::Full);
@@ -352,6 +353,7 @@ namespace Weltall
 			Visitor.Choice("balance.experience", Balance.Experience, {"original", "1.5x", "2x", "3x", "4x"});
 			Visitor.Choice("balance.gold", Balance.Gold, {"original", "1.5x", "2x", "3x", "4x"});
 			Visitor.Choice("balance.encounters", Balance.Encounters, {"none", "quarter", "half", "original", "double"});
+			Visitor.Flag("balance.exploration_fast_forward", Balance.bExplorationFastForward);
 			Visitor.Flag("game.party_change_anywhere", Settings.bPartyChangeAnywhere);
 
 			auto& PerfectWorks = Settings.PerfectWorks;

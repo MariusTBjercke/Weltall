@@ -127,7 +127,7 @@ namespace Weltall
 
 		namespace Modding
 		{
-			enum : int32 { Balance, Experience, Gold, Encounters, PartyChanges, Count };
+			enum : int32 { Balance, Experience, Gold, Encounters, PartyChanges, ExplorationFastForward, Count };
 			constexpr int32 RewardRates = 5;
 			constexpr int32 EncounterRates = 5;
 		}
@@ -154,7 +154,7 @@ namespace Weltall
 		namespace Display
 		{
 			enum : int32 { FullScreen, WindowSize, Aspect, IntegerScaling, Sorting, SceneryFilter, SpriteFilter, MovieFilter, Crt, AntiAliasing, Culling, Pilots, Gears, ChapterCards, MessageBoxScale,
-				MessageBoxBackground, TextSpeed, AutoAdvance, BattleSpeed, BattleFlashes, SeeThrough, BackgroundPause, Count };
+				MessageBoxBackground, TextSpeed, AutoAdvance, BattleSpeed, BattleFlashes, SeeThrough, BackgroundPause, Compass, Count };
 
 			/** The window's rows (full screen, its size) are not there where the game has no window of its own: the rows after them move up. */
 			int32 Hidden(const FDisplayModes& Modes)
@@ -327,6 +327,8 @@ namespace Weltall
 				return Shown(Text::Display::BattleSpeed, ChoiceName(Settings.BattleSpeed, Text::Display::BattleSpeedValues));
 			case Display::BattleFlashes:
 				return Shown(Text::Display::BattleFlashes, ChoiceName(Settings.Field.BattleFlashes, Text::Display::BattleFlashesValues));
+			case Display::Compass:
+				return Shown(Text::Display::Compass, ChoiceName(Settings.Field.Compass, Text::Display::CompassValues));
 			default:
 				return Shown(Text::Display::PauseInBackground, OnOff(Settings.Display.bPauseInBackground));
 			}
@@ -341,6 +343,8 @@ namespace Weltall
 				return Shown(Text::Modding::Encounters, ChoiceName(Settings.Balance.Encounters, Text::Modding::EncounterValues));
 			case Modding::PartyChanges:
 				return Shown(Text::Modding::PartyChanges, OnOff(Settings.bPartyChangeAnywhere));
+			case Modding::ExplorationFastForward:
+				return Shown(Text::Modding::ExplorationFastForward, OnOff(Settings.Balance.bExplorationFastForward));
 			default:
 				return Heading(Text::Modding::Balance);
 			}
@@ -544,6 +548,8 @@ namespace Weltall
 				return StepChoice(Settings.BattleSpeed, Direction, BattleSpeedCount);
 			case Display::BattleFlashes:
 				return StepChoice(Settings.Field.BattleFlashes, Direction, 3);
+			case Display::Compass:
+				return StepChoice(Settings.Field.Compass, Direction, static_cast<int32>(OptionsText::Display::CompassValues.size()));
 			default:
 				Settings.Display.bPauseInBackground = !Settings.Display.bPauseInBackground;
 				return true;
@@ -559,6 +565,9 @@ namespace Weltall
 				return StepChoice(Settings.Balance.Encounters, Direction, Modding::EncounterRates);
 			case Modding::PartyChanges:
 				Settings.bPartyChangeAnywhere = !Settings.bPartyChangeAnywhere;
+				return true;
+			case Modding::ExplorationFastForward:
+				Settings.Balance.bExplorationFastForward = !Settings.Balance.bExplorationFastForward;
 				return true;
 			default:
 				return false;

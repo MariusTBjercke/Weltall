@@ -36,7 +36,7 @@ public:
  * one) in the part of it the picture's shape takes, through the CRT filter when one is chosen.
  */
 WELTALL_API void AddDisplayFramePasses(FRDGBuilder& GraphBuilder, FRDGTextureRef Output, const FIntRect& Display, const Weltall::FDisplayOptions& Options,
-	const IScreenFrame* Frame);
+	const IScreenFrame* Frame, bool bTouchOverlay = false);
 
 /** The game's two controller ports as the players' devices fill them, at a display frame. */
 struct FGamePads
@@ -62,6 +62,7 @@ public:
 
 	/** What the player did to the field's view in the display frame, before its Update; a screen without the field has none. */
 	virtual void AddViewInput(const Weltall::FFieldViewInput& Input) {}
+	virtual bool UsesShouldersForSpeed() const { return false; }
 
 	/**
 	 * One of the port's own keys pressed (Weltall::IsPortAction: the save states', the message log's), before the display frame's

@@ -37,6 +37,7 @@ namespace
 		Settings.Field.bDetailedPilots = false;
 		Settings.Field.GearModels = EFieldGearModels::Everywhere;
 		Settings.Field.BattleFlashes = EBattleFlashes::Softer;
+		Settings.Field.Compass = ECompassPlacement::Ultrawide;
 		Settings.SoundOutput = ESoundOutput::WideStereo;
 		Settings.VoiceLanguage = EVoiceLanguage::Japanese;
 		Settings.MovieSubtitles = EMovieSubtitles::On;
@@ -58,7 +59,7 @@ namespace
 		Settings.Controls.ChangeButtonLayout(EButtonLayout::Japan);
 		Settings.TextSpeed = EMesTextSpeed::Quadruple;
 		Settings.BattleSpeed = EBattleSpeed::Quadruple;
-		Settings.Balance = {ERewardRate::OneAndAHalf, ERewardRate::Quadruple, EEncounterRate::Quarter};
+		Settings.Balance = {ERewardRate::OneAndAHalf, ERewardRate::Quadruple, EEncounterRate::Quarter, true};
 		Settings.PerfectWorks = {true, false, EPerfectWorksPortraits::Resized, true, false, false, true, false, true, true};
 		Settings.Expansions = {false, "Elly's errand"};
 		return Settings;
@@ -171,6 +172,9 @@ TEST_CASE("The settings' text lists every setting and reads back the same", "[Se
 	CHECK(ValueOf(Defaults, "sound.output") == "stereo");
 	CHECK(ValueOf(Defaults, "display.window_size").empty());
 	CHECK(ValueOf(Defaults, "display.aspect") == "window");
+	CHECK(ValueOf(Defaults, "field.compass") == "16:9");
+	CHECK(ReadPlayerSettings("field.compass = off\n").Field.Compass == ECompassPlacement::Off);
+	CHECK(ReadPlayerSettings("field.compass = 32:9\n").Field.Compass == ECompassPlacement::Wide);
 	CHECK(ValueOf(Defaults, "display.integer_scaling") == "false");
 	CHECK(ReadPlayerSettings("display.integer_scaling = true\n").Display.bIntegerScaling);
 	CHECK(ValueOf(Defaults, "display.crt_filter") == "off");
@@ -247,6 +251,7 @@ TEST_CASE("The settings' text lists every setting and reads back the same", "[Se
 	CHECK(ValueOf(Defaults, "balance.experience") == "original");
 	CHECK(ValueOf(Defaults, "balance.gold") == "original");
 	CHECK(ValueOf(Defaults, "balance.encounters") == "original");
+	CHECK(ValueOf(Defaults, "balance.exploration_fast_forward") == "false");
 	CHECK(ReadPlayerSettings("balance.experience = 3x\n").Balance.Experience == ERewardRate::Triple);
 	CHECK(ReadPlayerSettings("balance.encounters = none\n").Balance.Encounters == EEncounterRate::None);
 	CHECK(ReadPlayerSettings("balance.gold = 5x\n").Balance.Gold == ERewardRate::Original);
@@ -299,6 +304,7 @@ TEST_CASE("The settings' text lists every setting and reads back the same", "[Se
 	CHECK(ValueOf(Text, "balance.experience") == "1.5x");
 	CHECK(ValueOf(Text, "balance.gold") == "4x");
 	CHECK(ValueOf(Text, "balance.encounters") == "quarter");
+	CHECK(ValueOf(Text, "balance.exploration_fast_forward") == "true");
 	CHECK(ValueOf(Text, "mods.perfect_works") == "true");
 	CHECK(ValueOf(Text, "mods.perfect_works.portraits") == "resized");
 	CHECK(ValueOf(Text, "mods.perfect_works.title_screen") == "false");

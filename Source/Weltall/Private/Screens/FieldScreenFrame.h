@@ -31,11 +31,11 @@ public:
 	FRDGTextureRef ScreenPixels(FRDGBuilder& GraphBuilder);
 
 private:
-	/** A picture kept, and the scale its area laid screens out at. */
+	/** A picture kept, and the area it was drawn at. */
 	struct FDrawn
 	{
 		TRefCountPtr<IPooledRenderTarget> Target;
-		int32 WholeScale = 0;
+		FScreenArea Area;
 	};
 
 	FRDGTextureRef Draw(FRDGBuilder& GraphBuilder, const FScreenArea& Area, FDrawn& Into);
@@ -88,6 +88,7 @@ public:
 	virtual void AddPasses(FRDGBuilder& GraphBuilder, FRDGTextureRef Output, const FScreenArea& Area) const override;
 
 	FFieldSceneDraw Draw;
+	Weltall::ECompassPlacement Compass = Weltall::ECompassPlacement::Wide;
 	/** A movie the field shows in place of its scene, the whole screen its picture. */
 	TSharedPtr<FMoviePictureTexture> MoviePicture;
 	Weltall::FDrawList Layer;

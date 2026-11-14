@@ -28,12 +28,16 @@ world map, menus, the Battling arena and movies. Gameplay behavior has been chec
 original game's code. I've finished my own playthrough, including the ending and a clear save.
 Automated tests have run every map and story battle, along with long stretches of the story
 from save to save. You can play from start to finish, and I'm fixing reported issues as
-they come in. If something goes wrong, the game displays an error and tells you which log to include
-in a bug report.
+they come in. See [Reporting a problem](#reporting-a-problem) for where to find logs and crash reports.
 
 ## What Weltall adds
 
 - **Higher resolutions and widescreen** up to 32:9, with scenery extending beyond the original 4:3 view.
+  On a 4:3 display, choose **Options → Display → Aspect ratio → 4:3** and turn off **Integer scaling**
+  to fill the screen.
+- **Field compass placement** under Options → Display. Choose 4:3, 16:9, 21:9, Screen or Off.
+  The default is 16:9. A choice wider than the game picture uses its edge. With touch controls visible,
+  the compass uses its original placement.
 - **Smooth motion at any refresh rate**, including 120 Hz and above, without changing the game's pace.
 - **A free camera** on the field and world map, with rotation, tilt and zoom using a mouse or right stick.
 - **See-through scenery**: trees, rocks and walls between the camera and your party are thinned out around them, so
@@ -45,7 +49,11 @@ in a bug report.
 - **Softer battle flashes**, or none at all, for the bright screen flashes from attacks and Ether.
 - **Separate volumes** for the music, sound effects, battle voices and movies, plus a master volume.
 - **3D Gears** on the field and world map, using their battle models, plus full-size party sprites in Gear areas.
-- **Battle speeds of 2x and 4x**, and faster text up to instant. Timed dialogue still leaves you time to read it.
+- **Battle speeds of 2x and 4x**, and faster text up to instant. Story battles start at normal speed. Press R1
+  (Camera right) to speed them up. Timed dialogue still leaves you time to read it.
+- **Optional field fast-forward** under **Options → Modding → Balance → Field fast-forward**. Use R1 and L1 to
+  step through 1x, 2x and 4x on the field and world map, including in-game scenes. While enabled,
+  use the right stick or mouse to move the camera. Menus and prerecorded movies play at normal speed.
 - **Balance options** to earn up to four times the experience and gold, and to have fewer random battles, more of
   them, or none at all.
 - **Optional party changes during free play**: enable **Options → Modding → Party changes**, then hold L2 and
@@ -153,6 +161,9 @@ page, which you install yourself. Download it and open it on your device. If ask
 or file manager to install apps. On Samsung devices, if Auto Blocker prevents installation, turn it off
 under Settings → Security and privacy.
 
+On Adreno 610 devices, MSAA falls back to single-sample rendering for Vulkan compatibility. You can
+choose **Supersampling** under **Options → Display → Anti-aliasing** to smooth edges on those devices.
+
 If Android blocks the APK because the developer is unverified, follow
 [Android's setup instructions](https://developer.android.com/developer-verification/guides/faq).
 You may need to enable apps from unverified developers in Developer options and wait 24 hours once.
@@ -222,6 +233,12 @@ For a quick save while exploring on foot or in Gears, press **F5** to save a sta
 control, outside dialogue and cutscenes. In a vehicle, go inside the ship first. These states work only
 in Weltall, and may not load in a different version. Keep ordinary saves too.
 
+To assign a controller shortcut, select a binding slot and tap one button, or hold one and press
+another on the same controller. Use a combo by pressing the buttons in that order. The first button
+keeps its normal action. The second button runs the shortcut while the first is held.
+The same two-button combos can be assigned and used with the on-screen controls. For example, hold
+the on-screen Select button (−) and tap R1 to assign **Save state**, or tap L1 to assign **Load state**.
+
 ### Reporting a problem
 
 If the game stops with an error on screen, attach the log file it names to a bug report and describe
@@ -233,6 +250,8 @@ what you were doing. If it crashes, zip and attach the newest crash folder:
 That folder includes the log and crash dump. A save from just before the problem is helpful too. On
 Android, tap **Save the log** on the error screen, or use **Save the log** under **Options → Saves**
 after a crash, and attach the zip file it saves. It holds the logs of your last few sessions.
+If Android returns directly to the launcher, reopen Weltall to export the logs. If you have ADB set up,
+run `adb logcat -b crash -d` right after the crash to capture any native crash details.
 
 ## Development
 
@@ -285,6 +304,8 @@ Packages are written to `out/builds/<Configuration>/<Platform>`. Run `Weltall.ex
 from there. The script links your checkout's disc images into the package's `Games` folder. All
 builds share the same settings and saves in your user folders.
 
+For Android auxiliary controller buttons, apply [the input patch](Scripts/UnrealAuxiliaryButtons.patch)
+to the Unreal Engine 5.8.2 source tree with `git apply` before building.
 An Android package needs the Android SDK in `ANDROID_HOME`, its NDK r27c in `NDKROOT` and a JDK 21
 in `ANDROID_JAVA_HOME`. It holds two APKs: `Weltall-arm64.apk` for devices and `Weltall-x64.apk`,
 which the script runs on the SDK's emulator as its check (the one running, or the virtual device
@@ -297,7 +318,7 @@ other configurations use the SDK's debug key.
 `python Scripts/package.py --archive Shipping` also creates a release zip in `out/releases`, without
 disc images, and a separate debug symbols archive. For Android, the release file is the arm64 APK.
 
-`python Scripts/release.py 1.0.1` builds the Windows, Linux and Android Shipping packages from a
+`python Scripts/release.py 1.0.3` builds the Windows, Linux and Android Shipping packages from a
 pushed commit whose `ProjectVersion` matches that version. It creates the archives and a GitHub draft
 release with the player downloads and release notes, using the GitHub CLI. Publish the draft from
 the release page.

@@ -60,7 +60,7 @@ namespace Weltall::OptionsText
 		inline constexpr FRow Resolution{"Resolution", {"Window size when not in", "fullscreen.", ""}};
 		/** The value: width, then height. */
 		inline constexpr std::string_view ResolutionValue = "{} x {}";
-		inline constexpr FRow Aspect{"Aspect ratio", {"Auto fills the window. 16:9", "and 4:3 add black bars", "where needed."}};
+		inline constexpr FRow Aspect{"Aspect ratio", {"Auto uses the window shape.", "4:3 fills a 4:3 display with", "integer scaling off."}};
 		inline constexpr std::array<std::string_view, 3> AspectValues{"Auto", "16:9", "4:3"};
 		inline constexpr FRow IntegerScaling{"Integer scaling", {"Scales by whole numbers so", "pixels and scanlines are even,", "with black borders around."}};
 		inline constexpr FRow Sorting{"Depth sorting", {"Draws characters and Gears in", "the right depth order. Scenery", "too includes the scenery."}};
@@ -86,7 +86,7 @@ namespace Weltall::OptionsText
 		inline constexpr std::array<std::string_view, 4> TextSpeedValues{"Normal", "2x", "4x", "Instant"};
 		inline constexpr FRow AutoAdvance{"Auto-advance text", {"Dialogue goes on by itself", "after a pause to read it.", "Choices still wait for you."}};
 		inline constexpr std::array<std::string_view, 4> AutoAdvanceValues{"Off", "Slow", "Normal", "Fast"};
-		inline constexpr FRow BattleSpeed{"Battle speed", {"How fast battles play. Change", "it in battle with Camera left", "and right."}};
+		inline constexpr FRow BattleSpeed{"Battle speed", {"Story battles start at", "Normal. Change speed in", "battle with Camera L/R."}};
 		inline constexpr std::array<std::string_view, 3> BattleSpeedValues{"Normal", "2x", "4x"};
 		inline constexpr FRow BattleFlashes{"Battle flashes", {"Softer dims the screen flashes", "of attacks and Ethers. Off", "removes them."}};
 		inline constexpr std::array<std::string_view, 3> BattleFlashesValues{"Original", "Softer", "Off"};
@@ -97,6 +97,8 @@ namespace Weltall::OptionsText
 		inline constexpr FRow SeeThrough{"See-through scenery", {"Shows the party through what", "stands in front of them, in", "a bubble of the chosen size."}};
 		inline constexpr std::array<std::string_view, 4> SeeThroughValues{"Off", "Small", "Normal", "Large"};
 		inline constexpr FRow PauseInBackground{"Pause in background", {"Pauses the game when its", "window isn't in focus. Play", "time stops too."}};
+		inline constexpr FRow Compass{"Compass", {"Sets the field compass edge.", "Wider choices use the picture", "edge. Off hides the compass."}};
+		inline constexpr std::array<std::string_view, 5> CompassValues{"4:3", "16:9", "21:9", "Screen", "Off"};
 	}
 
 	/** The CRT filter's parts. */
@@ -164,6 +166,7 @@ namespace Weltall::OptionsText
 		inline constexpr FRow Gold{"Gold", {"Multiplies the gold you get", "from battles. Normal is the", "original amount."}};
 		inline constexpr std::array<std::string_view, 5> RewardValues{"Normal", "1.5x", "2x", "3x", "4x"};
 		inline constexpr FRow Encounters{"Encounters", {"Changes how often random", "battles happen on the field", "and the world map."}};
+		inline constexpr FRow ExplorationFastForward{"Field fast-forward", {"Camera L/R change speed on", "the field and world map.", "Includes in-game scenes."}};
 		inline constexpr std::array<std::string_view, 5> EncounterValues{"None", "1/4", "1/2", "Normal", "2x"};
 		inline constexpr std::string_view Mods = "Mods";
 		inline constexpr FRow Assets{"Assets", {"Export game files to edit and", "load your own versions. Press", "Confirm to open."}};
@@ -496,6 +499,8 @@ namespace Weltall::OptionsText
 
 		/** Listening for a key: what to press ("{}" the noun), then how to stop. */
 		inline constexpr std::string_view PressKey = "Press a {} to assign.";
+		inline constexpr std::string_view PressShortcut = "Press a key or tap a button.";
+		inline constexpr std::string_view PressChord = "Hold one, press another.";
 		inline constexpr std::string_view StopListening = "Esc or wait to cancel.";
 		/** Listening for an axis: the way asked for, on the mouse and on a stick. */
 		inline constexpr std::string_view MoveMouseRight = "Move the mouse right.";
