@@ -232,6 +232,8 @@ struct FFieldSceneDraw
 {
 	/** Three rows per placed model, model to view space; the view-space quads take the last, the identity. */
 	TArray<FVector4f> Objects;
+	/** The object (rows / 3) the view-space quads take: the characters', the particles', the children's models'. */
+	uint32 ViewObject = 0;
 	/** Per polygon, its corners' colors this frame (the first's top byte FieldColorFlags): the scenery's, the gears', then the dynamic polygons'. */
 	TArray<FUintVector4> Colors;
 	/**
@@ -319,6 +321,13 @@ WELTALL_API bool BuildFieldFrameDraw(const Weltall::FFieldScene& Scene, const We
  * view between two frames, shown at once.
  */
 WELTALL_API void MoveFieldSceneView(FFieldSceneDraw& Draw, const Weltall::FAffine& From, const Weltall::FAffine& To);
+
+/**
+ * Moves the frame's view-space quads alone (the characters', the particles', the children's models') from the view they
+ * were made under (From) to another (To): the scenery's objects blend between two frames' views on their own, these were
+ * made with the latest frame's, and a turning camera would leave them a frame behind it.
+ */
+WELTALL_API void MoveFieldSceneQuadView(FFieldSceneDraw& Draw, const Weltall::FAffine& From, const Weltall::FAffine& To);
 
 /**
  * Moves a field scene drawn under Latest's view, Alpha of the way from Previous's where it blended, to the same views

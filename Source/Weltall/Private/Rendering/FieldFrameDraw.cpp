@@ -66,26 +66,32 @@ namespace
 		return Matrix;
 	}
 
+	/** One object's rows moved on by Move, a view-space point's way to where it is drawn. */
+	void MoveFieldSceneObject(FFieldSceneDraw& Draw, int32 First, const FMatrix44f& Move)
+	{
+		// The object's rows as a matrix taking its own points to view space, then moved.
+		FMatrix44f Object = FMatrix44f::Identity;
+		for (int32 Row = 0; Row < 3; ++Row)
+		{
+			const FVector4f& Rows = Draw.Objects[First + Row];
+			Object.M[0][Row] = Rows.X;
+			Object.M[1][Row] = Rows.Y;
+			Object.M[2][Row] = Rows.Z;
+			Object.M[3][Row] = Rows.W;
+		}
+		const FMatrix44f Moved = Object * Move;
+		for (int32 Row = 0; Row < 3; ++Row)
+		{
+			Draw.Objects[First + Row] = FVector4f(Moved.M[0][Row], Moved.M[1][Row], Moved.M[2][Row], Moved.M[3][Row]);
+		}
+	}
+
 	/** Every object's rows moved on by Move, a view-space point's way to where it is drawn. */
 	void MoveFieldSceneObjects(FFieldSceneDraw& Draw, const FMatrix44f& Move)
 	{
 		for (int32 First = 0; First + 2 < Draw.Objects.Num(); First += 3)
 		{
-			// The object's rows as a matrix taking its own points to view space, then moved.
-			FMatrix44f Object = FMatrix44f::Identity;
-			for (int32 Row = 0; Row < 3; ++Row)
-			{
-				const FVector4f& Rows = Draw.Objects[First + Row];
-				Object.M[0][Row] = Rows.X;
-				Object.M[1][Row] = Rows.Y;
-				Object.M[2][Row] = Rows.Z;
-				Object.M[3][Row] = Rows.W;
-			}
-			const FMatrix44f Moved = Object * Move;
-			for (int32 Row = 0; Row < 3; ++Row)
-			{
-				Draw.Objects[First + Row] = FVector4f(Moved.M[0][Row], Moved.M[1][Row], Moved.M[2][Row], Moved.M[3][Row]);
-			}
+			MoveFieldSceneObject(Draw, First, Move);
 		}
 		// The world's up turns with the view: the shadows and the see-through holes test against it where things are drawn.
 		if (!Draw.FloorUp.IsZero())
@@ -148,6 +154,22 @@ void MoveFieldSceneView(FFieldSceneDraw& Draw, const Weltall::FAffine& From, con
 	}
 	// A view-space point back to the world, then into To's view.
 	MoveFieldSceneObjects(Draw, FromMatrix.Inverse() * RowVectorMatrix(To));
+}
+
+void MoveFieldSceneQuadView(FFieldSceneDraw& Draw, const Weltall::FAffine& From, const Weltall::FAffine& To)
+{
+	const FMatrix44f FromMatrix = RowVectorMatrix(From);
+	const int32 First = static_cast<int32>(Draw.ViewObject) * 3;
+	if (FMath::Abs(FromMatrix.Determinant()) < UE_SMALL_NUMBER || First + 2 >= Draw.Objects.Num())
+	{
+		return;
+	}
+	MoveFieldSceneObject(Draw, First, FromMatrix.Inverse() * RowVectorMatrix(To));
+}
+
+FMatrix44f RowVectorFieldView(const Weltall::FAffine& View)
+{
+	return RowVectorMatrix(View);
 }
 
 namespace
@@ -293,6 +315,7 @@ bool BuildFieldFrameDraw(const Weltall::FFieldScene& Scene, const Weltall::FFiel
 		}
 	}
 	AddObject(Draw.Objects, Weltall::FGteMatrix::Identity());
+	Draw.ViewObject = static_cast<uint32>(Draw.Objects.Num() / 3 - 1);
 	for (const Weltall::FFieldPolygonView& Polygon : Latest.Scenery.Polygons)
 	{
 		const auto Pack = [](const Weltall::FMdlColor& Color) { return static_cast<uint32>(Color.R | Color.G << 8 | Color.B << 16); };

@@ -50,7 +50,7 @@ namespace
 
 }
 
-FVector3f FieldCharacterOffset(const Weltall::FFieldCharacterView& Character, const Weltall::FFieldFrame* Previous, float Alpha)
+FVector3f FieldCharacterOffset(const Weltall::FFieldCharacterView& Character, const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha)
 {
 	if (Previous == nullptr)
 	{
@@ -64,7 +64,27 @@ FVector3f FieldCharacterOffset(const Weltall::FFieldCharacterView& Character, co
 			{
 				return FVector3f::ZeroVector;
 			}
-			return (ToVector(Before.Origin) - ToVector(Character.Origin)) * (1.0f - Alpha);
+			// Where it stood in the world at each tick, from where the view put it: the quads are made in the latest one's.
+			const FMatrix44f Now = RowVectorFieldView(Weltall::FAffine::From(Latest.View.View));
+			const FMatrix44f Earlier = RowVectorFieldView(Weltall::FAffine::From(Previous->View.View));
+			if (FMath::Abs(Now.Determinant()) < UE_SMALL_NUMBER || FMath::Abs(Earlier.Determinant()) < UE_SMALL_NUMBER)
+			{
+				return FVector3f::ZeroVector;
+			}
+			const auto Through = [](const FVector4f& Vector, const FMatrix44f& Matrix)
+			{
+				return FVector4f(Vector.X * Matrix.M[0][0] + Vector.Y * Matrix.M[1][0] + Vector.Z * Matrix.M[2][0] + Vector.W * Matrix.M[3][0],
+					Vector.X * Matrix.M[0][1] + Vector.Y * Matrix.M[1][1] + Vector.Z * Matrix.M[2][1] + Vector.W * Matrix.M[3][1],
+					Vector.X * Matrix.M[0][2] + Vector.Y * Matrix.M[1][2] + Vector.Z * Matrix.M[2][2] + Vector.W * Matrix.M[3][2],
+					Vector.X * Matrix.M[0][3] + Vector.Y * Matrix.M[1][3] + Vector.Z * Matrix.M[2][3] + Vector.W * Matrix.M[3][3]);
+			};
+			const FVector4f NowOrigin(Character.Origin[0], Character.Origin[1], Character.Origin[2], 1.0f);
+			const FVector4f EarlierOrigin(Before.Origin[0], Before.Origin[1], Before.Origin[2], 1.0f);
+			const FVector4f NowWorld = Through(NowOrigin, Now.Inverse());
+			const FVector4f EarlierWorld = Through(EarlierOrigin, Earlier.Inverse());
+			// Its own move, in the latest frame's view: the view's turn between the two ticks moves every quad at once.
+			const FVector4f InView = Through((EarlierWorld - NowWorld) * (1.0f - Alpha), Now);
+			return FVector3f(InView.X, InView.Y, InView.Z);
 		}
 	}
 	return FVector3f::ZeroVector;
@@ -168,11 +188,11 @@ namespace
 void AddFieldCharacterQuads(const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha, const FFieldSceneMesh& Mesh,
 	FFieldSceneDraw& Draw)
 {
-	const uint32 Identity = static_cast<uint32>(Draw.Objects.Num() / 3 - 1);
+	const uint32 Identity = Draw.ViewObject;
 	TArray<FVector3f, TInlineAllocator<128>> Offsets;
 	for (const Weltall::FFieldCharacterView& Character : Latest.Characters)
 	{
-		Offsets.Add(FieldCharacterOffset(Character, Previous, Alpha));
+		Offsets.Add(FieldCharacterOffset(Character, Latest, Previous, Alpha));
 	}
 	for (int32 Index = 0; Index < static_cast<int32>(Latest.Quads.size()); ++Index)
 	{
@@ -225,7 +245,7 @@ void AddFieldSeeThroughHoles(const Weltall::FFieldScene& Scene, const Weltall::F
 		{
 			continue;
 		}
-		const FVector3f Offset = FieldCharacterOffset(Character, Previous, Alpha);
+		const FVector3f Offset = FieldCharacterOffset(Character, Latest, Previous, Alpha);
 		Corners.Reset();
 		for (const Weltall::FFieldCharacterQuad& Entry : Latest.Quads)
 		{
@@ -465,7 +485,7 @@ void AddFieldBackdrop(const Weltall::FFieldFrame& Latest, const Weltall::FFieldF
 	Draw.BackdropRegions.Append(Strip.data(), static_cast<int32>(Strip.size()));
 	const Weltall::FFieldBackdrop Backdrop = Previous != nullptr ? Weltall::BlendFieldBackdrop(Previous->Backdrop, Latest.Backdrop, Alpha) : Latest.Backdrop;
 	Weltall::DrawFieldBackdrop(Backdrop, -BackdropBeyond, Weltall::FieldBackdropWidth + BackdropBeyond, Draw.BackdropQuads);
-	const uint32 Identity = static_cast<uint32>(Draw.Objects.Num() / 3 - 1);
+	const uint32 Identity = Draw.ViewObject;
 	// Far behind anything the field draws, placed where it projects onto the screen's pixels.
 	const float Scale = BackdropDepth / FMath::Max(Draw.ProjectionDistance, 1.0f);
 	for (const Weltall::FFieldBackdropQuad& Quad : Draw.BackdropQuads)
@@ -503,7 +523,7 @@ void AddFieldBackdrop(const Weltall::FFieldFrame& Latest, const Weltall::FFieldF
 void AddFieldParticleQuads(const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha, const FFieldSceneMesh& Mesh,
 	FFieldSceneDraw& Draw)
 {
-	const uint32 Identity = static_cast<uint32>(Draw.Objects.Num() / 3 - 1);
+	const uint32 Identity = Draw.ViewObject;
 	Draw.ParticleCorners = static_cast<uint32>(Draw.DynamicCorners.Num());
 	for (const Weltall::FFieldParticleQuad& Particle : Latest.Particles)
 	{

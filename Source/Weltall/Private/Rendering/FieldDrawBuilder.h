@@ -172,8 +172,15 @@ private:
 	Weltall::FTexelKindCache* TexelKinds;
 };
 
-/** How far a character's quads are drawn from where the latest tick put them: back toward the tick before's place by 1 - Alpha. */
-FVector3f FieldCharacterOffset(const Weltall::FFieldCharacterView& Character, const Weltall::FFieldFrame* Previous, float Alpha);
+/**
+ * How far a character's quads are drawn from where the latest tick put them: its own move back toward the tick before's
+ * place by 1 - Alpha, in the latest frame's view. The view's turn between the two ticks moves all the quads at once
+ * (MoveFieldSceneQuadView) and is not part of this.
+ */
+FVector3f FieldCharacterOffset(const Weltall::FFieldCharacterView& Character, const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha);
+
+/** A view as a row-vector matrix: a view-space point times it, the world's. */
+FMatrix44f RowVectorFieldView(const Weltall::FAffine& View);
 
 /** The characters' quads as dynamic corners, their states and colours, each moved back toward the tick before's place by 1 - Alpha. */
 void AddFieldCharacterQuads(const Weltall::FFieldFrame& Latest, const Weltall::FFieldFrame* Previous, float Alpha, const FFieldSceneMesh& Mesh,

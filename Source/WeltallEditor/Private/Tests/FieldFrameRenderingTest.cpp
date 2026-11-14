@@ -770,6 +770,29 @@ bool FFieldViewMoveTest::RunTest(const FString&)
 		const float Drawn = Rows.X * InFrom.X + Rows.Y * InFrom.Y + Rows.Z * InFrom.Z + Rows.W;
 		TestTrue(FString::Printf(TEXT("axis %d at %f, not %f"), Row, Drawn, Expected[Row]), FMath::IsNearlyEqual(Drawn, Expected[Row], 0.01f));
 	}
+	// The view-space quads' object alone: the placed model's rows stay as they were.
+	FFieldSceneDraw Quads;
+	Quads.Objects.Emplace(1.0f, 0.0f, 0.0f, 0.0f);
+	Quads.Objects.Emplace(0.0f, 1.0f, 0.0f, 0.0f);
+	Quads.Objects.Emplace(0.0f, 0.0f, 1.0f, 0.0f);
+	Quads.Objects.Emplace(2.0f, 0.0f, 0.0f, 300.0f);
+	Quads.Objects.Emplace(0.0f, 2.0f, 0.0f, 0.0f);
+	Quads.Objects.Emplace(0.0f, 0.0f, 2.0f, 500.0f);
+	MoveFieldSceneQuadView(Quads, Weltall::FAffine::From(From), Weltall::FAffine::From(To));
+	for (int32 Row = 0; Row < 3; ++Row)
+	{
+		const FVector4f& Rows = Quads.Objects[Row];
+		const float Drawn = Rows.X * InFrom.X + Rows.Y * InFrom.Y + Rows.Z * InFrom.Z + Rows.W;
+		TestTrue(FString::Printf(TEXT("quads axis %d at %f, not %f"), Row, Drawn, Expected[Row]), FMath::IsNearlyEqual(Drawn, Expected[Row], 0.01f));
+	}
+	const FVector4f Placed[3] = {FVector4f(2.0f, 0.0f, 0.0f, 300.0f), FVector4f(0.0f, 2.0f, 0.0f, 0.0f), FVector4f(0.0f, 0.0f, 2.0f, 500.0f)};
+	for (int32 Row = 0; Row < 3; ++Row)
+	{
+		TestEqual(FString::Printf(TEXT("the placed model's row %d is left alone"), Row), Quads.Objects[3 + Row].X, Placed[Row].X);
+		TestEqual(FString::Printf(TEXT("the placed model's row %d is left alone"), Row), Quads.Objects[3 + Row].Y, Placed[Row].Y);
+		TestEqual(FString::Printf(TEXT("the placed model's row %d is left alone"), Row), Quads.Objects[3 + Row].Z, Placed[Row].Z);
+		TestEqual(FString::Printf(TEXT("the placed model's row %d is left alone"), Row), Quads.Objects[3 + Row].W, Placed[Row].W);
+	}
 	return true;
 }
 

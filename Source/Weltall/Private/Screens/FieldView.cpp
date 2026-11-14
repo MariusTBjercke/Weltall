@@ -209,6 +209,23 @@ TSharedPtr<const IScreenFrame> FFieldView::Capture(const Weltall::FFieldProgram&
 	TSharedRef<FFieldScreenFrame> Next = Free != nullptr ? *Free : DisplayFrames.Add_GetRef(MakeShared<FFieldScreenFrame>(Mesh.ToSharedRef(), Vram));
 	const Weltall::FFieldFrame* Previous = Program.PreviousFrame();
 	const bool bBlended = Fill(*Next, Program.Drawing().Scene(), Program.Drawing().Vram(), *Latest, Previous, Alpha, &Matches, ShownMovie);
+	// The scenery's objects blend between the two frames' views; the characters' and the particles' quads were made with
+	// the latest frame's alone, so a turning camera would leave them a frame behind. Put them on the blended view first.
+	if (bBlended && Previous != nullptr)
+	{
+		const Weltall::FGteMatrix& Now = Latest->View.View;
+		const Weltall::FGteMatrix& Before = Previous->View.View;
+		Weltall::FGteMatrix Between = Now;
+		for (int32 Row = 0; Row < 3; ++Row)
+		{
+			for (int32 Column = 0; Column < 3; ++Column)
+			{
+				Between.M[Row][Column] = static_cast<int16>(FMath::Lerp(static_cast<float>(Before.M[Row][Column]), static_cast<float>(Now.M[Row][Column]), Alpha));
+			}
+			Between.T[Row] = FMath::RoundToInt32(FMath::Lerp(static_cast<float>(Before.T[Row]), static_cast<float>(Now.T[Row]), Alpha));
+		}
+		MoveFieldSceneQuadView(Next->Draw, Weltall::FAffine::From(Now), Weltall::FAffine::From(Between));
+	}
 	UnroundFieldSceneView(Next->Draw, *Latest, bBlended ? Previous : nullptr, Alpha);
 	// The player's offsets show live rather than a tick behind: what the drawing shows of them moved to what they are now.
 	Weltall::FFieldViewOffsets Drawn = Latest->ShownOffsets;
